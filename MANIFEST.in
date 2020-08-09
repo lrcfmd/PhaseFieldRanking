@@ -1,0 +1,3 @@
+include README.rst
+include ranking_phase_fields/icsd2017
+include TABLES/*.table
