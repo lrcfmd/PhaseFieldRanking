@@ -1,3 +1,5 @@
 include README.rst
 include ranking_phase_fields/icsd2017
-include TABLES/*.table
+include ranking_phase_fields/rpp.input
+include ranking_phase_fields/TABLES/*.table
+include ranking_phase_fields/test_inputs/*input
