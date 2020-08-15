@@ -10,7 +10,7 @@ def sym2num(data, features):
     dics = [ {} for i in range(n)]
     #create n new descriptors from the tables
     for i in range(n):
-       table = read_features(f'../TABLES/{features[i]}.table')
+       table = read_features(f'TABLES/{features[i]}.table')
        dics[i]  = {sym: float(num) for sym, num in zip(symbols, table)}
 
     vectors = []
@@ -23,6 +23,6 @@ def sym2num(data, features):
     return np.array(vectors)
 
 def num2sym(number):
-    numbers = [str(int(num)) for num in read_features('../TABLES/Pettifor.table')]
+    numbers = [str(int(num)) for num in read_features('TABLES/Pettifor.table')]
     dic = {num: sym for num, sym in zip(numbers, symbols)}
     return dic[str(int(number))]

@@ -8,17 +8,14 @@
 
 from itertools import permutations as pt
 from symbols import *
+
 import os
 
 def assign_params(params, input_params, name):
-    if name in params and name == 'scaling':
-        if str(params[name]).strip() == 'True':
-            input_params[name] = True
-        else:
-            input_params[name] = False
-    elif name in params:
+    # if in input file
+    if name in params:
         parameters = str(params[name]).split(',')
-        if len(parameters) == 1 and name == 'features':
+        if len(parameters) == 1 and ( name == 'features' or 'test' in name):
             input_params[name] = [parameters[0].strip()]
         elif len(parameters) == 1:
             p = parameters[0].strip()
@@ -27,6 +24,7 @@ def assign_params(params, input_params, name):
             input_params[name] = p
         else:
             input_params[name] = [i.strip() for i in parameters]
+    # default values
     else: 
         print (f'{name} is not specified in the input file. \
                 Will use a default value from rpp.input')
@@ -44,8 +42,11 @@ def assign_params(params, input_params, name):
             input_params[name] ='Pettifor'
         elif name == 'average':
             input_params[name] = 1
-        elif name == 'scaling':
-            input_params[name] = False
+    
+    # default for 'all' elements
+    if input_params[name] == 'all':
+        input_params[name] = symbols   
+
 
 def parse_input(inputfile='rpp.input'):
     print(f'Reading input file {inputfile}')
@@ -69,12 +70,25 @@ def parse_input(inputfile='rpp.input'):
     assign_params(params, input_params,'anion2_test')
     assign_params(params, input_params,'method')
     assign_params(params, input_params,'average_runs')
-    assign_params(params, input_params,'scaling')
     assign_params(params, input_params,'features')
 
     for k,v in input_params.items():
         print(f'{k:15} : {v}')
-    
+
+#   castomise testing elements for phase fields cases:
+    if input_params['phase_fields'] == 'binary':
+        input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test']]
+    elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 2:
+        input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test'], input_params['anion2_test']]
+    elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 1:
+        input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test']]
+    else:
+        input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test'], input_params['anion2_test']]
+
+    input_params.pop('cation1_test') 
+    input_params.pop('cation2_test') 
+    input_params.pop('anion1_test') 
+    input_params.pop('anion2_test') 
     return input_params
 
 def numatoms(phase_fields):
@@ -120,7 +134,7 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
             if len(set(oxi) & set(anions)) == nanions and field not in fields:
                 fields.append(field)
         elif field not in fields:
-            fields.append(field)
+            fields.append(softed(field))
     
     if os.path.isfile(f"{phase_fields}_training_set.dat"):
         print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
@@ -133,3 +147,12 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
     print("==============================================")
     return fields 
 
+if __name__ == "__main__":
+    try: 
+        ffile = sys.argv[1]
+    except:
+        print('Provide list of elements of interest in the input file. Usage: python parse_icsd.py <input_file>')
+        print('Reading default parameters from rpp.input')
+    params = parse_input()
+    training = parse_icsd(params['phase_fields'], params['anions_train'], \
+            params['nanions_train'], params['cations_train'], params['icsd_file'])

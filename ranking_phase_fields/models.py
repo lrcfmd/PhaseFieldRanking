@@ -21,19 +21,15 @@ from pyod.models.loci import LOCI
 from pyod.models.mcd import MCD
 
 def vec2name(ndes, natom):
-    if natom == 2:
-        return [0, ndes]
-    elif natom == 3:
-        return [0, ndes, 2*ndes]
-    else:
-        return [0, ndes, 2*ndes, 3*ndes]
+    v = []
+    for i in range(natom):
+        v += [ndes * i]
+    print(v)
+    return v 
 
-def scale(data, var):
+def scale(data):
     r = max(data) - min(data)
-    if r != 0:
-        return (data - min(data)) / r, var / r 
-    else:
-        return data, var
+    return (data - min(data)) / r if r != 0 else data
 
 def mse(instance, aver):
     """ calculate RMSE for scores """
@@ -46,7 +42,7 @@ def mse(instance, aver):
 def getout(natom, data, var, scores, nnet, fname):
     dout = []
     for i in range(len(data)):
-        v = [num2sym(data[i][n]) for n in nnet] + [scores[i],var[i]]
+        v = [num2sym(data[i][n]) for n in nnet] + [scores[i]] #,var[i]]
         dout.append(v)
     dout = np.asarray(dout)
     dout = dout[scores.argsort()]
@@ -66,7 +62,7 @@ def rank(phase_fields, x_train, x_test, model, ndes, natom, average=1, scaling=F
     # models
     clfs = {
     'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
-    'VAE'            : VAE(encoder_neurons=nnet[:6], decoder_neurons=nnet[6:], contamination=0.1, epochs=15),
+    'VAE'            : VAE(encoder_neurons=nnet[:6], decoder_neurons=nnet[6:], contamination=0.1, epochs=1),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
     'HBOS'           : HBOS(),
@@ -116,9 +112,9 @@ def rank(phase_fields, x_train, x_test, model, ndes, natom, average=1, scaling=F
     vart =mse(trstack, y_train_scores/average)
     var = mse(tstack, y_test_scores/average)
 
-    if scaling:
-        y_train_scores, vart = scale(y_train_scores/average, vart)
-        y_test_scores, var = scale(y_test_scores/average, var)
+    if average == 1:
+        y_train_scores = scale(y_train_scores/average)
+        y_test_scores = scale(y_test_scores/average)
     else:
         y_train_scores /= average
         y_test_scores /= average
