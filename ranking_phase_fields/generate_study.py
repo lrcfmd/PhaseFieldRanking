@@ -4,7 +4,7 @@
 (don't have associated compounds reported in ICSD)
 """
 import os, sys
-import parse_icsd
+import ranking_phase_fields.parse_icsd
 from itertools import permutations as pmts
 
 def permute(vectors):

@@ -1,6 +1,6 @@
 import numpy as np
-from symbols import *
-from features import *
+from ranking_phase_fields.symbols import *
+from ranking_phase_fields.features import *
 # Import all models
 from pyod.models.auto_encoder import AutoEncoder
 from pyod.models.vae import VAE
@@ -24,7 +24,6 @@ def vec2name(ndes, natom):
     v = []
     for i in range(natom):
         v += [ndes * i]
-    print(v)
     return v 
 
 def scale(data):
@@ -39,30 +38,33 @@ def mse(instance, aver):
         s += i
     return np.sqrt(s)/aver
 
-def getout(natom, data, var, scores, nnet, fname):
-    dout = []
+def getout(natom, data, feature, var, scores, nnet, fname, mode):
+    """ Make human readeable and print the results """
+    results = {}
     for i in range(len(data)):
-        v = [num2sym(data[i][n]) for n in nnet] + [scores[i]] #,var[i]]
-        dout.append(v)
-    dout = np.asarray(dout)
-    dout = dout[scores.argsort()]
-    print("Phase fields   av. scores        variance over runs", file=open(fname,'a'))
-    for i in range(len(dout)):
-        print(f"{' '.join(dout[i,:natom]):14} {dout[i,-2]:17} {dout[i,-1]}", file=open(fname,'a'))
+        name = ' '.join(sorted([num2sym(data[i][n], feature) for n in nnet]))
+        if name not in results:
+            results[name] = np.array([scores[i], var[i]])
+        else:
+            results[name] += np.array([scores[i], var[i]])
+    n = np.math.factorial(natom)
+    results = {k:v/n for k,v in sorted(results.items(), key=lambda i : i[1][0])} 
 
-def rank(phase_fields, x_train, x_test, model, ndes, natom, average=1, scaling=False):
+    print(f"Phase fields     scores        {mode}", file=open(fname,'a'))
+    for name, score in results.items():
+        print(f"{name:16} {score[0]:17} {score[1]}", file=open(fname,'a'))
+
+def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
     """ train a model on x_train and predict x_test """
-    # build hidden layers for AE and VAE:
-    if natom == 4 and ndes == 34:
-        nnet = [136,102,68,40,20,4,20,40,68,102,136]
-    else:
-        nnet = [ndes*natom, int(ndes*natom*.75), int(ndes*natom*.5), int(ndes*natom*.25), \
+    ndes = len(features)
+    nnet = [ndes*natom, int(ndes*natom*.75), int(ndes*natom*.5), int(ndes*natom*.25), \
                 natom, int(ndes*natom*.25),  int(ndes*natom*.5), int(ndes*natom*.75), ndes*natom ] 
+    nnet = [136, 102, 68, 34, 4, 34, 68, 102, 136]
 
     # models
     clfs = {
     'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
-    'VAE'            : VAE(encoder_neurons=nnet[:6], decoder_neurons=nnet[6:], contamination=0.1, epochs=1),
+    'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=15),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
     'HBOS'           : HBOS(),
@@ -109,17 +111,19 @@ def rank(phase_fields, x_train, x_test, model, ndes, natom, average=1, scaling=F
             tstack = np.vstack([tstack,last])
 
     # results out
-    vart =mse(trstack, y_train_scores/average)
-    var = mse(tstack, y_test_scores/average)
-
-    if average == 1:
-        y_train_scores = scale(y_train_scores/average)
-        y_test_scores = scale(y_test_scores/average)
-    else:
+    net = vec2name(ndes, natom)    
+    if average > 1:
+        vart =mse(trstack, y_train_scores/average)
+        var = mse(tstack, y_test_scores/average)
         y_train_scores /= average
         y_test_scores /= average
+        getout(natom, x_train, features[0], vart, y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'variance from av. score')
+        getout(natom, x_test, features[0], var,  y_test_scores, net, f'{phase_fields}_{model}_test_scores.dat', 'variance from av. score')
+    else:
+        y_train_scaled  = scale(y_train_scores)
+        y_test_scaled = scale(y_test_scores)
 
     print(f"Writing scores to {phase_fields}_{model}_train_scores.dat")
-    getout(natom, x_train, vart, y_train_scores, vec2name(ndes, natom), f'{phase_fields}_{model}_train_scores.dat')
+    getout(natom, x_train, features[0], y_train_scaled,  y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'Norm. score')
     print(f"Writing scores to {phase_fields}_{model}_test_scores.dat")
-    getout(natom, x_test, var,  y_test_scores, vec2name(ndes, natom), f'{phase_fields}_{model}_test_scores.dat')
+    getout(natom, x_test, features[0], y_test_scaled,  y_test_scores, net, f'{phase_fields}_{model}_test_scores.dat', 'Norm. score')

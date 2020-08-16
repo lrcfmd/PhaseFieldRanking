@@ -1,5 +1,5 @@
 import numpy as np
-from symbols import *
+from ranking_phase_fields.symbols import *
 
 def read_features(f):
     lines = open(f,'r').readlines()
@@ -22,7 +22,7 @@ def sym2num(data, features):
         vectors.append(numbers)
     return np.array(vectors)
 
-def num2sym(number):
-    numbers = [str(int(num)) for num in read_features('TABLES/Pettifor.table')]
+def num2sym(number, feature):
+    numbers = [str(int(num)) for num in read_features(f'TABLES/{feature}.table')]
     dic = {num: sym for num, sym in zip(numbers, symbols)}
     return dic[str(int(number))]

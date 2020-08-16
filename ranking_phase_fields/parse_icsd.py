@@ -6,10 +6,9 @@
 # Parse input to read requirements for the training and testing sets,
 # to extract the training set from ICSD, and to form a testing set 
 
-from itertools import permutations as pt
-from symbols import *
-
 import os
+from itertools import permutations as pt
+from ranking_phase_fields.symbols import *
 
 def assign_params(params, input_params, name):
     # if in input file

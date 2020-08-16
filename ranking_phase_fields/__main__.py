@@ -20,12 +20,12 @@
 
 import sys
 import numpy as np
-from parse_icsd import *
-import generate_study 
-from features import *
-from models import *
+from ranking_phase_fields.parse_icsd import *
+from ranking_phase_fields.generate_study  import *
+from ranking_phase_fields.features import *
+from ranking_phase_fields.models import *
 
-def main():
+def main(input_file):
     ''' Main run of an application '''
     print("========================================================")
     print("RANKING OF THE PHASE FIELDS BY LIKELIHOOD WITH ICSD DATA \n")
@@ -35,23 +35,23 @@ def main():
     print("=========================================================")
     
     # parce input file
-    try:
-        params = parse_input(sys.argv[1])
-    except:
-        print('Usage: python ranking_phase_fields.py <input_file>. \n \
-               See rpp.input example file')
-        params = parse_input()
-    
+#   try:
+#       params = parse_input(sys.argv[1])
+#   except:
+#       print('Usage: python ranking_phase_fields.py <input_file>. \n \
+#              See rpp.input example file')
+#       params = parse_input()
+    params = parse_input(input_file)    
     # exctract training and generate testing set
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
     
-    testing = generate_study.generate_study(params['phase_fields'], params['elements_test'], training)
+    testing = generate_study(params['phase_fields'], params['elements_test'], training)
     
     # data augmentation by permutation
     print("Augmenting data by elemental permutations:")
-    training = generate_study.permute(training)
-    testing = generate_study.permute(testing)
+    training = permute(training)
+    testing = permute(testing)
     print(f"Training set: {len(training)} {params['phase_fields']} phase fields")
     print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
     print("==============================================")
@@ -64,7 +64,7 @@ def main():
     testing  = sym2num(testing, params['features'])
                                  #
     # train a model and predict
-    rank(params['phase_fields'], training, testing, params['method'], len(params['features']), \
+    rank(params['phase_fields'], params['features'], training, testing, params['method'], \
             numatoms(params['phase_fields']), params['average_runs'])
 
 if __name__ == "__main__":
