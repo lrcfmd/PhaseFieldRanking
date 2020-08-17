@@ -14,7 +14,7 @@ def assign_params(params, input_params, name):
     # if in input file
     if name in params:
         parameters = str(params[name]).split(',')
-        if len(parameters) == 1 and ( name == 'features' or 'test' in name):
+        if len(parameters) == 1 and (name == 'features' or parameters[0].strip() in symbols):
             input_params[name] = [parameters[0].strip()]
         elif len(parameters) == 1:
             p = parameters[0].strip()
@@ -27,7 +27,7 @@ def assign_params(params, input_params, name):
     else: 
         print (f'{name} is not specified in the input file. \
                 Will use a default value from rpp.input')
-        if 'ion' in name and 'nani' not in name:
+        if 'cation' or 'anion' in name and 'nani' not in name:
             input_params[name] = 'all'
         elif 'nani' in name:
             input_params[name] =  0

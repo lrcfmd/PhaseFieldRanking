@@ -60,19 +60,19 @@ def get_samples(data, feature, scores, var, nnet):
 
 def getout(results, fname, mode):
     """ print the results """
-    print(f"Phase fields     scores   {mode}", file=open(fname,'a'))
+    print(f"Phase fields,     scores,     {mode},", file=open(fname,'a'))
     for name, score in results.items():
-        print(f"{name:16} {round(score[0],3):10} {round(score[1],3)}", file=open(fname,'a'))
+        print(f"{name:16}, {round(score[0],3):6}, {round(score[1],3):8},", file=open(fname,'a'))
 
 def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
     """ train a model on x_train and predict x_test """
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
-            natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2) ] 
+            natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
 
     # models
     clfs = {
-    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
+    'AE'             : AutoEncoder(hidden_neurons=[ndes*natom]+nnet+[ndes*natom], contamination=0.1, epochs=15),
     'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=15),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
@@ -126,15 +126,20 @@ def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
         var = mse(tstack, y_test_scores/average)
         y_train_scores /= average
         y_test_scores /= average
-#        getout(natom, x_train, features[0], vart, y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'variance from av. score')
-#        getout(natom, x_test, features[0], var,  y_test_scores, net, f'{phase_fields}_{model}_test_scores.dat', 'variance from av. score')
+
+        print(f"Writing scores to {phase_fields}_{model}_train_scores.csv")
+        results_train = average_permutations(natom, x_train, features[0], y_train_scores, vart, net)
+        getout(results_train, f'{phase_fields}_{model}_train_scores.csv', 'variance from av. score')
+        print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
+        results = average_permutations(natom, x_test, features[0], y_test_scores, var, net)
+        getout(results, f'{phase_fields}_{model}_test_scores.csv', 'variance from av. score')
     else:
         y_train_scaled  = scale(y_train_scores)
         y_test_scaled = scale(y_test_scores)
 
-    print(f"Writing scores to {phase_fields}_{model}_train_scores.dat")
-    #getout(natom, x_train, features[0], y_train_scaled,  y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'Norm. score')
-    print(f"Writing scores to {phase_fields}_{model}_test_scores.dat")
-#    results = get_samples(x_test, features[0], y_test_scores, y_test_scaled, net)
-    results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
-    getout(results, f'{phase_fields}_{model}_test_scores.dat', 'Norm. score')
+        print(f"Writing scores to {phase_fields}_{model}_train_scores.csv")
+        results_train = average_permutations(natom, x_train, features[0], y_train_scores, y_train_scaled, net)
+        getout(results_train, f'{phase_fields}_{model}_train_scores.csv', 'Norm. score')
+        print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
+        results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
+        getout(results, f'{phase_fields}_{model}_test_scores.csv', 'Norm. score')
