@@ -114,7 +114,7 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
         if len(i.split()) != numatoms(phase_fields) + 1:
             continue
         # read elements of a composition
-        for n in range(1,len(i.split())):
+        for n in range(1, len(i.split())):
             el = list(i.split()[n])
             sym = el[0]
             if not el[1].isdigit(): 
@@ -130,10 +130,10 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
 
         # check there is a right number of anions in a composition:
         if nanions != 0:
-            if len(set(oxi) & set(anions)) == nanions and field not in fields:
-                fields.append(field)
-        elif field not in fields:
-            fields.append(softed(field))
+            if len(set(oxi) & set(anions)) == nanions and sorted(field) not in fields:
+                fields.append(sorted(field))
+        elif sorted(field) not in fields:
+            fields.append(sorted(field))
     
     if os.path.isfile(f"{phase_fields}_training_set.dat"):
         print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")

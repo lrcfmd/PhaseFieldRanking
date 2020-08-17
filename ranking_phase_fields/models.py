@@ -38,8 +38,8 @@ def mse(instance, aver):
         s += i
     return np.sqrt(s)/aver
 
-def getout(natom, data, feature, var, scores, nnet, fname, mode):
-    """ Make human readeable and print the results """
+def average_permutations(natom, data, feature, scores, var, nnet):
+    """ average scores for permutations """
     results = {}
     for i in range(len(data)):
         name = ' '.join(sorted([num2sym(data[i][n], feature) for n in nnet]))
@@ -48,18 +48,27 @@ def getout(natom, data, feature, var, scores, nnet, fname, mode):
         else:
             results[name] += np.array([scores[i], var[i]])
     n = np.math.factorial(natom)
-    results = {k:v/n for k,v in sorted(results.items(), key=lambda i : i[1][0])} 
+    return {k:v/n for k,v in sorted(results.items(), key=lambda i : i[1][0])} 
 
-    print(f"Phase fields     scores        {mode}", file=open(fname,'a'))
+def get_samples(data, feature, scores, var, nnet):
+    """ get one sample of permutations """
+    results = {}
+    for i in range(len(data)):
+        name = ' '.join(sorted([num2sym(data[i][n], feature) for n in nnet]))
+        results[name] = [scores[i], var[i]]
+    return {k:v for k,v in sorted(results.items(), key=lambda i: i[1][0])}
+
+def getout(results, fname, mode):
+    """ print the results """
+    print(f"Phase fields     scores   {mode}", file=open(fname,'a'))
     for name, score in results.items():
-        print(f"{name:16} {score[0]:17} {score[1]}", file=open(fname,'a'))
+        print(f"{name:16} {round(score[0],3):10} {round(score[1],3)}", file=open(fname,'a'))
 
 def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
     """ train a model on x_train and predict x_test """
     ndes = len(features)
-    nnet = [ndes*natom, int(ndes*natom*.75), int(ndes*natom*.5), int(ndes*natom*.25), \
-                natom, int(ndes*natom*.25),  int(ndes*natom*.5), int(ndes*natom*.75), ndes*natom ] 
-    nnet = [136, 102, 68, 34, 4, 34, 68, 102, 136]
+    nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
+            natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2) ] 
 
     # models
     clfs = {
@@ -117,13 +126,15 @@ def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
         var = mse(tstack, y_test_scores/average)
         y_train_scores /= average
         y_test_scores /= average
-        getout(natom, x_train, features[0], vart, y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'variance from av. score')
-        getout(natom, x_test, features[0], var,  y_test_scores, net, f'{phase_fields}_{model}_test_scores.dat', 'variance from av. score')
+#        getout(natom, x_train, features[0], vart, y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'variance from av. score')
+#        getout(natom, x_test, features[0], var,  y_test_scores, net, f'{phase_fields}_{model}_test_scores.dat', 'variance from av. score')
     else:
         y_train_scaled  = scale(y_train_scores)
         y_test_scaled = scale(y_test_scores)
 
     print(f"Writing scores to {phase_fields}_{model}_train_scores.dat")
-    getout(natom, x_train, features[0], y_train_scaled,  y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'Norm. score')
+    #getout(natom, x_train, features[0], y_train_scaled,  y_train_scores, net, f'{phase_fields}_{model}_train_scores.dat', 'Norm. score')
     print(f"Writing scores to {phase_fields}_{model}_test_scores.dat")
-    getout(natom, x_test, features[0], y_test_scaled,  y_test_scores, net, f'{phase_fields}_{model}_test_scores.dat', 'Norm. score')
+#    results = get_samples(x_test, features[0], y_test_scores, y_test_scaled, net)
+    results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
+    getout(results, f'{phase_fields}_{model}_test_scores.dat', 'Norm. score')

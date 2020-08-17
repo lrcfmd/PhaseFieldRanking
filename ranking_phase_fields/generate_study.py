@@ -4,7 +4,7 @@
 (don't have associated compounds reported in ICSD)
 """
 import os, sys
-import ranking_phase_fields.parse_icsd
+from ranking_phase_fields.parse_icsd import *
 from itertools import permutations as pmts
 
 def permute(vectors):
@@ -30,7 +30,7 @@ def generate_study(phase_fields, lists, training):
     study = []
     for f in field:
         # check elements are unique
-        if len(set(f)) == len(lists) and f not in training and sorted(f) not in study:
+        if len(set(f)) == len(lists) and sorted(f) not in training and sorted(f) not in study:
             study.append(sorted(f))
 
     if os.path.isfile(f'{phase_fields}_testing.dat'):
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     except:
         print('Provide list of elements of interest in the input file. Usage: python generate_study.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_icsd.parse_input()
-    training = parse_icsd.parse_icsd(params['phase_fields'], params['anions_train'], \
+    params = parse_input()
+    training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
     testing = generate_study(params['phase_fields'], params['elements_test'], training) 
