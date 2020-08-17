@@ -21,6 +21,7 @@ from pyod.models.loci import LOCI
 from pyod.models.mcd import MCD
 
 def vec2name(ndes, natom):
+    """ get index of the first feature for each element """
     v = []
     for i in range(natom):
         v += [ndes * i]
@@ -72,7 +73,7 @@ def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
 
     # models
     clfs = {
-    'AE'             : AutoEncoder(hidden_neurons=[ndes*natom]+nnet+[ndes*natom], contamination=0.1, epochs=15),
+    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
     'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=15),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
@@ -96,19 +97,17 @@ def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
     print(f"Training a {model} model on {len(x_train)} {phase_fields} phase fields in ICSD")
     print(f'Run {model} {average} times to average the scores')
 
-    # run {average} time for scores averaging 
+    # run {average} times for scores averaging 
     print(f"Prediciting the similarity (proximity in terms of reconstruction error for VAE) of {len(x_test)} unexplored phase fields to ICSD data")
     for i in range(average):
         print(f"{model} RUN: {i+1}")
         clf.fit(x_train)
 
-        # get the prediction labels and outlier scores of the training data
-        y_train_pred = clf.labels_               # binary labels (0: inliers, 1: outliers)
+        # get the prediction outlier scores of the training data
         lastt = np.asarray(clf.decision_scores_) # raw outlier scores
         y_train_scores += lastt
      
         # get the prediction on the test data
-        y_test_pred = clf.predict(x_test)              # outlier labels (0 or 1)
         last = np.asarray(clf.decision_function(x_test))  # outlier scores
         y_test_scores += last
      
@@ -120,7 +119,8 @@ def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
             tstack = np.vstack([tstack,last])
 
     # results out
-    net = vec2name(ndes, natom)    
+    net = vec2name(ndes, natom)   
+    # if more than 1 run: averaging over runs, calculate variance 
     if average > 1:
         vart =mse(trstack, y_train_scores/average)
         var = mse(tstack, y_test_scores/average)

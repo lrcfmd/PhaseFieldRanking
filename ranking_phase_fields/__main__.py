@@ -26,7 +26,7 @@ from ranking_phase_fields.features import *
 from ranking_phase_fields.models import *
 
 def main(input_file):
-    ''' Main run of an application '''
+    ''' Main routine '''
     print("========================================================")
     print("RANKING OF THE PHASE FIELDS BY LIKELIHOOD WITH ICSD DATA \n")
     print("Similar phase fields to those found in ICSD are believed to be yield stable compostions.")
