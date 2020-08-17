@@ -6,9 +6,7 @@ Install: >>> pip install .
 Usage:   >>> python ranking_phase_fields.py <input_file>
 
 Supported methods for pattern detection
-are based on PyOD library that should be installed as:
-
-pip install pyod
+are based on PyOD library
 
 Models:
 
@@ -103,14 +101,13 @@ cation1_test  : (default: Li) list of elements for the first position (e.g. M in
 cation2_test  : (default: all) list of elements for the second position (e.g. M' in MM'AA' phase fields)
                 in the phase fields to explore (no reported associated compositions in ICSD).
                 Ignored for binary and ternary (type MAA') phase fields.
-anion1_test   : (default: S,O,Cl,Br,I,F,P,N) list of elements for the 3rd position (e.g. A in MM'AA' phase fields)
+anion1_test   : (default: S,O,Cl,Br,I,F,N) list of elements for the 3rd position (e.g. A in MM'AA' phase fields)
                 in the phase fields to explore (no reported associated compositions in ICSD).
                 Stands for a 3rd cation in ternary (type MM'M") and quaternary (type MM'M"A) phase fields.
-anion2_test   : (default: S,O,Cl,Br,I,F,P,N) list of elements for the 4th position (e.g. A' in MM'AA' phase fields)
+anion2_test   : (default: S,O,Cl,Br,I,F,N) list of elements for the 4th position (e.g. A' in MM'AA' phase fields)
                 in the phase fields to explore (no reported associated compositions in ICSD).
                 Ignored for ternary (type MM'A) phase fields.
 method        : (default: VAE) See all supported models above.
 average_runs  : (default: 1) Number of runs to average the scores over. Makes sense for not neural network based (AE, VAE)
                 methods.
-scaling       : (default: False) Normalization of scores. If True the scores range from 0 to 1.
 features      : (default: See rpp.input). See all supported features above.
