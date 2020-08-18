@@ -11,7 +11,7 @@
 #    ternaries
 #    quaternaries
 #    etc. with the specified ox. states
-# 3) AE or VAE models can be trained on the training set
+# 3) AE, VAE and other models can be trained on the training set
 # for detection of the outliers in the training and testing sets
 # and ranking the unexplored phase fields of choice in terms of the degree
 # of 'outlying' (degree = reconstruction error). That is hypothesised to 
@@ -24,30 +24,30 @@ from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
 from ranking_phase_fields.models import *
+from ranking_phase_fields.validation import *
+
 
 def main(input_file):
     ''' Main routine '''
     print("========================================================")
     print("RANKING OF THE PHASE FIELDS BY LIKELIHOOD WITH ICSD DATA \n")
-    print("Similar phase fields to those found in ICSD are believed to be yield stable compostions.")
+    print("Similar phase fields to those found in ICSD are believed to yield stable compostions.")
     print("The similarity is measured via encoding and decoding vectorized phase fields with VAE")
     print("\n Andrij Vasylenko 13.08.2020")
     print("=========================================================")
     
     # parce input file
-#   try:
-#       params = parse_input(sys.argv[1])
-#   except:
-#       print('Usage: python ranking_phase_fields.py <input_file>. \n \
-#              See rpp.input example file')
-#       params = parse_input()
     params = parse_input(input_file)    
     # exctract training and generate testing set
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
     
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
-    
+   
+    # 5-fold cross validation:
+    validate(params['phase_fields'], params['features'], training, params['method'], \
+        numatoms(params['phase_fields']), params['average_runs'])
+
     # data augmentation by permutation
     print("Augmenting data by elemental permutations:")
     training = permute(training)
@@ -62,7 +62,7 @@ def main(input_file):
     print("==============================================")
     training = sym2num(training, params['features'])
     testing  = sym2num(testing, params['features'])
-                                 #
+    
     # train a model and predict
     rank(params['phase_fields'], params['features'], training, testing, params['method'], \
             numatoms(params['phase_fields']), params['average_runs'])
