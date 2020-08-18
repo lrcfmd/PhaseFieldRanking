@@ -12,7 +12,7 @@ setup(name='ranking_phase_fields',
       author_email='and.vasylenko@gmail.com',
       license='MIT',
       packages=['ranking_phase_fields'],
-      install_requires=['pyod'],
+      install_requires=['pyod','numpy'],
       include_package_data=True,
       entry_points={"console_scripts": ["ranking_phase_fields=ranking_phase_fields.__main__:main"]},  
       zip_safe=False)
