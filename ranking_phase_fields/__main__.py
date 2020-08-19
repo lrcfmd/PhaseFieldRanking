@@ -45,12 +45,11 @@ def main(input_file):
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
    
     # 5-fold cross validation:
-    validate(params['phase_fields'], params['features'], training, params['method'], \
+    training, clf = validate(params['phase_fields'], params['features'], training, params['method'], \
         numatoms(params['phase_fields']), params['average_runs'])
 
     # data augmentation by permutation
     print("Augmenting data by elemental permutations:")
-    training = permute(training)
     testing = permute(testing)
     print(f"Training set: {len(training)} {params['phase_fields']} phase fields")
     print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
@@ -60,11 +59,10 @@ def main(input_file):
     print(f"Representing each element with {len(params['features'])} features.")
     print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
     print("==============================================")
-    training = sym2num(training, params['features'])
     testing  = sym2num(testing, params['features'])
     
     # train a model and predict
-    rank(params['phase_fields'], params['features'], training, testing, params['method'], \
+    rank(clf, params['phase_fields'], params['features'], training, testing, params['method'], \
             numatoms(params['phase_fields']), params['average_runs'])
 
 if __name__ == "__main__":

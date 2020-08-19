@@ -5,8 +5,26 @@ from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
 from ranking_phase_fields.models import *
+# Import all models
+from pyod.models.auto_encoder import AutoEncoder
+from pyod.models.vae import VAE
+from pyod.models.abod import ABOD
+from pyod.models.feature_bagging import FeatureBagging
+from pyod.models.hbos import HBOS
+from pyod.models.iforest import IForest
+from pyod.models.knn import KNN
+from pyod.models.lof import LOF
+from pyod.models.ocsvm import OCSVM
+from pyod.models.pca import PCA
+from pyod.models.sos import SOS
+from pyod.models.lscp import LSCP
+from pyod.models.cof import COF
+from pyod.models.cblof import CBLOF
+from pyod.models.sod import SOD
+from pyod.models.loci import LOCI
+from pyod.models.mcd import MCD
 
-def validate(phase_fields, features, x_train, model, natom):
+def validate(phase_fields, features, x_train, model, natom, average):
     """ split training data, train and validate a model"""
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
@@ -32,13 +50,14 @@ def validate(phase_fields, features, x_train, model, natom):
     'MCD'            : MCD()
     }
 
-    clf_main = clfs[model]
+    clft = clfs[model]
+    clf = clfs[model]
     net = vec2name(ndes, natom)
     # find threshold
     x_ = permute(x_train)
     x_ = sym2num(x_, features)
-    clf_main.fit(x_)
-    scores = np.array(clf.decision_scores_)
+    clft.fit(x_)
+    scores = np.array(clft.decision_scores_)
     threshold = 0.5 * (max(scores) + min(scores))
 
     print(f"Validation (5-fold) of {model} model")
@@ -67,6 +86,13 @@ def validate(phase_fields, features, x_train, model, natom):
         thr_ar = threshold * np.ones(len(prediction))
         results = average_permutations(natom, val_set, features[0], prediction, thr_ar, net)
         getout(results, f'Validation_{phase_fields}_{model}_set{i}.csv', 'threshold')
+
+    # if no averaging over several runs - print training scores
+    if average == 1:
+        train_scaled  = scale(scores)
+        training_results = average_permutations(natom, x_, features[0], train_scaled, thr_ar, net)
+        getout(training_results, f'{phase_fields}_{model}_training_scores.csv', 'threshold')
+    return x, clft
 
 if __name__ == "__main__":
     try:

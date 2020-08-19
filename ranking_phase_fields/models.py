@@ -1,24 +1,7 @@
 import numpy as np
 from ranking_phase_fields.symbols import *
 from ranking_phase_fields.features import *
-# Import all models
-from pyod.models.auto_encoder import AutoEncoder
-from pyod.models.vae import VAE
-from pyod.models.abod import ABOD
-from pyod.models.feature_bagging import FeatureBagging
-from pyod.models.hbos import HBOS
-from pyod.models.iforest import IForest
-from pyod.models.knn import KNN
-from pyod.models.lof import LOF
-from pyod.models.ocsvm import OCSVM
-from pyod.models.pca import PCA
-from pyod.models.sos import SOS
-from pyod.models.lscp import LSCP
-from pyod.models.cof import COF
-from pyod.models.cblof import CBLOF
-from pyod.models.sod import SOD
-from pyod.models.loci import LOCI
-from pyod.models.mcd import MCD
+from ranking_phase_fields.validation import *
 
 def vec2name(ndes, natom):
     """ get index of the first feature for each element """
@@ -65,81 +48,55 @@ def getout(results, fname, mode):
     for name, score in results.items():
         print(f"{name:16}, {round(score[0],3):6}, {round(score[1],3):8},", file=open(fname,'a'))
 
-def rank(phase_fields, features, x_train, x_test, model, natom, average=1):
+def rank(clf, phase_fields, features, x_train, x_test, model, natom, average=1):
     """ train a model on x_train and predict x_test """
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
             natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
-
-    # models
-    clfs = {
-    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
-    'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=15),
-    'ABOD'           : ABOD(),
-    'FeatureBagging' : FeatureBagging(),
-    'HBOS'           : HBOS(),
-    'IForest'        : IForest(),
-    'KNN'            : KNN(),
-    'LOF'            : LOF(),
-    'OCSVM'          : OCSVM(),
-    'PCA'            : PCA(),
-    'SOS'            : SOS(),
-    'COF'            : COF(),
-    'CBLOF'          : CBLOF(),
-    'SOD'            : SOD(),
-    'LOCI'           : LOCI(),
-    'MCD'            : MCD()
-    }
-
-    clf = clfs[model]
-    y_test_scores = np.zeros(len(x_test))
-    y_train_scores = np.zeros(len(x_train))
-    print(f"Training a {model} model on {len(x_train)} {phase_fields} phase fields in ICSD")
-    print(f'Run {model} {average} times to average the scores')
-
-    # run {average} times for scores averaging 
-    print(f"Prediciting the similarity (proximity in terms of reconstruction error for VAE) of {len(x_test)} unexplored phase fields to ICSD data")
-    for i in range(average):
-        print(f"{model} RUN: {i+1}")
-        clf.fit(x_train)
-
-        # get the prediction outlier scores of the training data
-        lastt = np.asarray(clf.decision_scores_) # raw outlier scores
-        y_train_scores += lastt
-     
-        # get the prediction on the test data
-        last = np.asarray(clf.decision_function(x_test))  # outlier scores
-        y_test_scores += last
-     
-        if i == 0:
-            trstack = lastt
-            tstack = last
-        else:
-            trstack = np.vstack([trstack,lastt])
-            tstack = np.vstack([tstack,last])
-
-    # results out
     net = vec2name(ndes, natom)   
-    # if more than 1 run: averaging over runs, calculate variance 
-    if average > 1:
+
+    if average == 1:
+        y_test_scores = clf.decision_function(x_test)
+        y_test_scaled = scale(y_test_scores)
+        print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
+        results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
+        getout(results, f'{phase_fields}_{model}_test_scores.csv', 'Norm. score')
+
+    else:
+        y_test_scores = np.zeros(len(x_test))
+        y_train_scores = np.zeros(len(x_train))
+        print(f"Training a {model} model on {len(x_train)} {phase_fields} phase fields in ICSD")
+        print(f'Run {model} {average} times to average the scores')
+     
+        # run {average} times for scores averaging 
+        print(f"Prediciting the similarity (proximity in terms of reconstruction error for VAE) of {len(x_test)} unexplored phase fields to ICSD data")
+        for i in range(average):
+            print(f"{model} RUN: {i+1}")
+            clf.fit(x_train)
+     
+            # get the prediction outlier scores of the training data
+            lastt = np.asarray(clf.decision_scores_) # raw outlier scores
+            y_train_scores += lastt
+         
+            # get the prediction on the test data
+            last = np.asarray(clf.decision_function(x_test))  # outlier scores
+            y_test_scores += last
+         
+            if i == 0:
+                trstack = lastt
+                tstack = last
+            else:
+                trstack = np.vstack([trstack,lastt])
+                tstack = np.vstack([tstack,last])
+     
+        # results out: averaging over runs, calculate variance 
         vart =mse(trstack, y_train_scores/average)
         var = mse(tstack, y_test_scores/average)
         y_train_scores /= average
         y_test_scores /= average
-
         print(f"Writing scores to {phase_fields}_{model}_train_scores.csv")
         results_train = average_permutations(natom, x_train, features[0], y_train_scores, vart, net)
         getout(results_train, f'{phase_fields}_{model}_train_scores.csv', 'variance from av. score')
         print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
         results = average_permutations(natom, x_test, features[0], y_test_scores, var, net)
         getout(results, f'{phase_fields}_{model}_test_scores.csv', 'variance from av. score')
-    else:
-        y_train_scaled  = scale(y_train_scores)
-        y_test_scaled = scale(y_test_scores)
-
-        print(f"Writing scores to {phase_fields}_{model}_train_scores.csv")
-        results_train = average_permutations(natom, x_train, features[0], y_train_scores, y_train_scaled, net)
-        getout(results_train, f'{phase_fields}_{model}_train_scores.csv', 'Norm. score')
-        print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
-        results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
-        getout(results, f'{phase_fields}_{model}_test_scores.csv', 'Norm. score')

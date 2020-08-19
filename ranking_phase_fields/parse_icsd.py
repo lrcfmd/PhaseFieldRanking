@@ -58,18 +58,18 @@ def parse_input(inputfile='rpp.input'):
         params[str(l[0]).strip()] = l[-1]
 
     input_params = {} 
-    assign_params(params, input_params,'icsd_file')
-    assign_params(params, input_params,'phase_fields')
-    assign_params(params, input_params,'anions_train')
-    assign_params(params, input_params,'nanions_train')
-    assign_params(params, input_params,'cations_train')
-    assign_params(params, input_params,'cation1_test')
-    assign_params(params, input_params,'cation2_test')
-    assign_params(params, input_params,'anion1_test')
-    assign_params(params, input_params,'anion2_test')
-    assign_params(params, input_params,'method')
-    assign_params(params, input_params,'average_runs')
-    assign_params(params, input_params,'features')
+    assign_params(params, input_params, 'icsd_file')
+    assign_params(params, input_params, 'phase_fields')
+    assign_params(params, input_params, 'anions_train')
+    assign_params(params, input_params, 'nanions_train')
+    assign_params(params, input_params, 'cations_train')
+    assign_params(params, input_params, 'cation1_test')
+    assign_params(params, input_params, 'cation2_test')
+    assign_params(params, input_params, 'anion1_test')
+    assign_params(params, input_params, 'anion2_test')
+    assign_params(params, input_params, 'method')
+    assign_params(params, input_params, 'average_runs')
+    assign_params(params, input_params, 'features')
 
     for k,v in input_params.items():
         print(f'{k:15} : {v}')
@@ -124,7 +124,7 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
                 break
             field.append(sym)
             oxi.append(ox)
-        i#check if the elements / cations are right:
+        #check if the elements / cations are right:
         if len(field) != numatoms(phase_fields):
             continue
 
