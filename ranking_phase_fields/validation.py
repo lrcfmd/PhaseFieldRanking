@@ -82,7 +82,7 @@ def validate(phase_fields, features, x_train, model, natom, average):
         prediction = np.asarray(clf.decision_function(val_set))
         val_error = len(prediction[prediction > threshold]) / len(val_set) * 100
 
-        print(f"Validation error of validation set {i}: {val_error}%", file=open('Validation_errors.dat','a'))
+        print(f"Validation error of validation set {i}: {round(val_error,2)}%", file=open('Validation_{phase_fields}_errors.dat','a'))
         thr_ar = threshold * np.ones(len(prediction))
         results = average_permutations(natom, val_set, features[0], prediction, thr_ar, net)
         getout(results, f'Validation_{phase_fields}_{model}_set{i}.csv', 'threshold')
