@@ -2,6 +2,10 @@ Ranking phase fields by likelihood with ICSD patterns
 
 Andrij Vasylenko 13.08.2020
 
+Requires:
+python-3.6
+pip
+
 Install: >>> pip install .
 Usage:   >>> python ranking_phase_fields.py <input_file>
 
