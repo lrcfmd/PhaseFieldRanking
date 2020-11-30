@@ -120,7 +120,9 @@ if __name__ == "__main__":
     print(f"Representing each element with {len(params['features'])} features.")
     print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
     print("==============================================")
-
+    trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
+    numatoms(params['phase_fields']), params['average_runs'])
     print(f"Validation the {params['method']} in 5-fold cross validation.")
     # 5-fold cross validation:
-    validate(params['phase_fields'], params['features'], training, params['method'], numatoms(params['phase_fields']),params['average_runs'])
+    validate(params['phase_fields'], params['features'], training, params['method'], \
+        numatoms(params['phase_fields']), threshold, nnet)
