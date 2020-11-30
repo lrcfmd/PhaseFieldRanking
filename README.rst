@@ -4,9 +4,13 @@ Andrij Vasylenko 13.08.2020
 
 Requires:
 
-python (version 3.5 or later); 
+python (version 3.5 or later)
 
-pip (version 19.0 or later);
+pip (version 19.0 or later)
+
+TensorFlow (version 2.0 or later)
+
+PyOD
 
 Install: >>> pip install .
 
