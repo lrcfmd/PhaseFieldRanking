@@ -27,7 +27,7 @@ def average_permutations(natom, data, feature, scores, var, nnet):
     results = {}
     for i in range(len(data)):
         name = ' '.join(sorted([num2sym(data[i][n], feature) for n in nnet]))
-        if name not in results:
+        if name not in results.keys():
             results[name] = np.array([scores[i], var[i]])
         else:
             results[name] += np.array([scores[i], var[i]])
@@ -48,7 +48,7 @@ def getout(results, fname, mode):
     for name, score in results.items():
         print(f"{name:16}, {round(score[0],3):6}, {round(score[1],3):8},", file=open(fname,'a'))
 
-def rank(clf, phase_fields, features, x_train, x_test, model, natom, average=1):
+def rank(clft, phase_fields, features, x_train, x_test, model, natom, average=1):
     """ train a model on x_train and predict x_test """
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
@@ -56,7 +56,7 @@ def rank(clf, phase_fields, features, x_train, x_test, model, natom, average=1):
     net = vec2name(ndes, natom)   
 
     if average == 1:
-        y_test_scores = clf.decision_function(x_test)
+        y_test_scores = clft.decision_function(x_test)
         y_test_scaled = scale(y_test_scores)
         print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
         results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
@@ -72,14 +72,14 @@ def rank(clf, phase_fields, features, x_train, x_test, model, natom, average=1):
         print(f"Prediciting the similarity (proximity in terms of reconstruction error for VAE) of {len(x_test)} unexplored phase fields to ICSD data")
         for i in range(average):
             print(f"{model} RUN: {i+1}")
-            clf.fit(x_train)
+            clft.fit(x_train)
      
             # get the prediction outlier scores of the training data
-            lastt = np.asarray(clf.decision_scores_) # raw outlier scores
+            lastt = np.asarray(clft.decision_scores_) # raw outlier scores
             y_train_scores += lastt
          
             # get the prediction on the test data
-            last = np.asarray(clf.decision_function(x_test))  # outlier scores
+            last = np.asarray(clft.decision_function(x_test))  # outlier scores
             y_test_scores += last
          
             if i == 0:

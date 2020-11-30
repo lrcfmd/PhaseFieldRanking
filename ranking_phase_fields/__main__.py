@@ -24,7 +24,8 @@ from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
 from ranking_phase_fields.models import *
-from ranking_phase_fields.validation import *
+#from ranking_phase_fields.validation import *
+from ranking_phase_fields.train_and_validate import *
 
 
 def main(input_file):
@@ -43,10 +44,14 @@ def main(input_file):
             params['nanions_train'], params['cations_train'], params['icsd_file'])
     
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
-   
-    # 5-fold cross validation:
-    training, clf = validate(params['phase_fields'], params['features'], training, params['method'], \
+
+    # model training: 
+    trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
         numatoms(params['phase_fields']), params['average_runs'])
+
+    # 5-fold cross validation:
+    validate(params['phase_fields'], params['features'], training, params['method'], \
+        numatoms(params['phase_fields']), threshold, nnet)
 
     # data augmentation by permutation
     print("Augmenting data by elemental permutations:")
@@ -61,9 +66,11 @@ def main(input_file):
     print("==============================================")
     testing  = sym2num(testing, params['features'])
     
-    # train a model and predict
-    rank(clf, params['phase_fields'], params['features'], training, testing, params['method'], \
+    # predict based on the trained model:
+    rank(clft, params['phase_fields'], params['features'], trained, testing, params['method'], \
             numatoms(params['phase_fields']), params['average_runs'])
+    
+    print("Finalising and exiting.")
 
 if __name__ == "__main__":
     main()
