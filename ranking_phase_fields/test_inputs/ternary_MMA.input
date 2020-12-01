@@ -6,7 +6,7 @@ nanions_train  : 1
 cation1_test   : Li
 anion1_test    : S,O,Cl,Br,I,F,P,N
 anion2_test    : S,O,Cl,Br,I,F,P,N,Se,As,Te
-method         : AE
+method         : VAE
 cross-validate : False
-average_runs   : 2
+average_runs   : 1
 features       : Pettifor, Number, AtomicVolume, AtomicWeight, BCCbandgap, BCCefflatcnt, BCCenergydiff, BCCenergy_pa, BCCfermi, BCCmagmom, BCCvolume_padiff, BCCvolume_pa, Column, CovalentRadius,Electronegativity, FirstIonizationEnergy, GSbandgap, GSefflatcnt, GSenergy_pa, GSestBCClatcnt, GSestFCClatcnt, GSmagmom, GSvolume_pa, ICSDVolume, MendeleevNumber, NdUnfilled, NdValence, NfUnfilled, NfValence, NpUnfilled, NpValence, NsUnfilled, NsValence, NUnfilled, NValance, Polarizability, Row
