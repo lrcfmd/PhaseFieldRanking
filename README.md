@@ -32,13 +32,13 @@ Dependencies can be installed automatically during installation.
 If no input file provided the run is equivalent to
 `python ranking_phase_fields.py rpp.input`
 
-and should reproduce results for Supplementary Table S3
+and should reproduce results for Supplementary Table S3.
 
 The results for this and other example runs with inputs from `ranking_phase_fields/test_input/`
-are copied in `ranking_phase_fields/test_results/`.
+are copied in `ranking_phase_fields/test_results/`
 
 ## Functionality
-Unsupervised pattern recognition methods utilise PyOD library
+Unsupervised pattern recognition methods utilise PyOD library.
 
 Models:
 
@@ -68,45 +68,85 @@ Journal of machine learning research 20(96), pp.1-7 (2019).
 Supported elemental features:
 
 TABLES/AtomicVolume.table
+
 TABLES/AtomicWeight.table
+
 TABLES/BCCbandgap.table
+
 TABLES/BCCefflatcnt.table
+
 TABLES/BCCenergy_pa.table
+
 TABLES/BCCenergydiff.table
+
 TABLES/BCCfermi.table
+
 TABLES/BCCmagmom.table
+
 TABLES/BCCvolume_pa.table
+
 TABLES/BCCvolume_padiff.table
+
 TABLES/BoilingT.table
+
 TABLES/Column.table
+
 TABLES/CovalentRadius.table
+
 TABLES/Density.table
+
 TABLES/Electronegativity.table
+
 TABLES/FirstIonizationEnergy.table
+
 TABLES/GSbandgap.table
+
 TABLES/GSefflatcnt.table
+
 TABLES/GSenergy_pa.table
+
 TABLES/GSestBCClatcnt.table
+
 TABLES/GSestFCClatcnt.table
+
 TABLES/GSmagmom.table
+
 TABLES/GSvolume_pa.table
+
 TABLES/ICSDVolume.table
+
 TABLES/MeltingT.table
+
 TABLES/MendeleevNumber.table
+
 TABLES/MiracleRadius.table
+
 TABLES/NUnfilled.table
+
 TABLES/NValance.table
+
 TABLES/NdUnfilled.table
+
 TABLES/NdValence.table
+
 TABLES/NfUnfilled.table
+
 TABLES/NfValence.table
+
 TABLES/NpUnfilled.table
+
 TABLES/NpValence.table
+
 TABLES/NsUnfilled.table
+
 TABLES/NsValence.table
+
 TABLES/Number.table
+
 TABLES/Pettifor.table
+
 TABLES/Polarizability.table
+
 TABLES/Row.table
 
 [2] Jha, D., Ward, L., Paul, A. et al. 
