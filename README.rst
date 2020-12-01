@@ -8,9 +8,19 @@ python (version 3.5 or later)
 
 pip (version 19.0 or later)
 
+OS:
+
+Ubuntu (version 18.04 or later)
+
+MacOS (Catalina 10.15.6 or later) 
+
+Uses:
+
 TensorFlow (version 2.0 or later)
 
-PyOD
+PyOD (0.7.8 or later)
+
+That can be installed automatically as
 
 Install: >>> pip install .
 
