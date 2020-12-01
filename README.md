@@ -1,6 +1,6 @@
 # Ranking phase fields by likelihood with ICSD patterns
 
-Andrij Vasylenko 13.08.2020
+Andrij Vasylenko
 
 ## Requirements
 
