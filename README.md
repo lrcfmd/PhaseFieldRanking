@@ -4,7 +4,7 @@ Andrij Vasylenko
 
 ## Requirements
 
-python (version 3.5 or later)
+python-3.8
 
 pip (version 19.0 or later)
 
@@ -12,7 +12,8 @@ OS:
 
 Ubuntu (version 18.04 or later)
 
-MacOS (Catalina 10.15.6 or later) 
+MacOS (Catalina 10.15.6 or later)
+
 
 ## Dependencies:
 
