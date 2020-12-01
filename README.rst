@@ -1,8 +1,8 @@
-Ranking phase fields by likelihood with ICSD patterns
+# Ranking phase fields by likelihood with ICSD patterns
 
 Andrij Vasylenko 13.08.2020
 
-Requires:
+## Requirements
 
 python (version 3.5 or later)
 
@@ -14,18 +14,29 @@ Ubuntu (version 18.04 or later)
 
 MacOS (Catalina 10.15.6 or later) 
 
-Uses:
+## Dependencies:
 
 TensorFlow (version 2.0 or later)
 
 PyOD (0.7.8 or later)
 
-That can be installed automatically as
+Dependencies can be installed automatically during installation.
 
-Install: >>> pip install .
+## Installation
+`pip install .`
 
-Usage:   >>> python ranking_phase_fields.py <input_file>
+## Usage
+`python ranking_phase_fields.py` <input_file>
 
+If no input file provided the run is equivalent to
+`python ranking_phase_fields.py rpp.input`
+
+and should reproduce results for Supplementary Table S3
+
+The results for this and other example runs from `ranking_phase_fields/test_input/`
+are copied in `ranking_phase_fields/test_results/`.
+
+## Input
 Supported methods for pattern detection
 are based on PyOD library
 
