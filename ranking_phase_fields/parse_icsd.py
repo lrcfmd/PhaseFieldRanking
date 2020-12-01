@@ -41,6 +41,8 @@ def assign_params(params, input_params, name):
             input_params[name] ='Pettifor'
         elif name == 'average':
             input_params[name] = 1
+        elif name == 'cross-validate':
+            input_params[name] = False
     
     # default for 'all' elements
     if input_params[name] == 'all':
@@ -68,6 +70,7 @@ def parse_input(inputfile='rpp.input'):
     assign_params(params, input_params, 'anion1_test')
     assign_params(params, input_params, 'anion2_test')
     assign_params(params, input_params, 'method')
+    assign_params(params, input_params, 'cross-validate')
     assign_params(params, input_params, 'average_runs')
     assign_params(params, input_params, 'features')
 

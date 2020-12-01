@@ -1,7 +1,7 @@
 import numpy as np
 from ranking_phase_fields.symbols import *
 from ranking_phase_fields.features import *
-from ranking_phase_fields.validation import *
+from ranking_phase_fields.train_and_validate import *
 
 def vec2name(ndes, natom):
     """ get index of the first feature for each element """

@@ -1,4 +1,3 @@
-"""5-fold validation"""
 import sys
 import numpy as np
 from ranking_phase_fields.parse_icsd import *
@@ -82,7 +81,7 @@ def validate(phase_fields, features, x_train, model, natom, threshold, nnet):
     net = vec2name(len(features), natom)    
 
     for i in range(5):
-        print(f"{model} cross_validation: validation subset #{i+1} ...")
+        print(f"{model} cross_validation: validation subset #{i+1}")
         val_set = x_train[i*l : (i+1)*l]
         print(f"validation set size: {len(val_set)}")
         val_train = np.asarray([d for d in x_train if d not in val_set])

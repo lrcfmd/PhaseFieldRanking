@@ -50,14 +50,14 @@ def main(input_file):
         numatoms(params['phase_fields']), params['average_runs'])
 
     # 5-fold cross validation:
-    validate(params['phase_fields'], params['features'], training, params['method'], \
+    if params['cross-validate'] == 'True':
+        validate(params['phase_fields'], params['features'], training, params['method'], \
         numatoms(params['phase_fields']), threshold, nnet)
 
     # data augmentation by permutation
-    print("Augmenting data by elemental permutations:")
     testing = permute(testing)
-    print(f"Training set: {len(training)} {params['phase_fields']} phase fields")
-    print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
+    #print(f"Training set: {len(trained)} {params['phase_fields']} phase fields")
+    #print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
     print("==============================================")
     
     # vectorise phase fields with features
