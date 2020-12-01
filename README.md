@@ -33,7 +33,7 @@ If no input file provided the run is equivalent to
 
 and should reproduce results for Supplementary Table S3
 
-The results for this and other example runs from `ranking_phase_fields/test_input/`
+The results for this and other example runs with inputs from `ranking_phase_fields/test_input/`
 are copied in `ranking_phase_fields/test_results/`.
 
 ## Input
