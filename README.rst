@@ -130,7 +130,9 @@ anion2_test   : (default: S,O,Cl,Br,I,F,N) list of elements for the 4th position
                 in the phase fields to explore (no reported associated compositions in ICSD).
                 Ignored for ternary (type MM'A) phase fields.
 method        : (default: VAE) See all supported models above.
+
 cross-validate: (default: Fault) If True sets 5-fold cross-validation of the model.
+
 average_runs  : (default: 1) Number of runs to average the scores over. Makes sense for not neural network based (AE, VAE)
                 methods.
 features      : (default: See rpp.input). See all supported features above.
