@@ -4,10 +4,10 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
-setup(name='ranking_phase_fields',
-      version='1.0',
+setup(name='rankfields',
+      version='0.1',
       description='Ranking phase fields with likelihood of finding a stable composition',
-      url='http://github.com/DrewNow/RankingPhaseFields',
+      url='http://github.com/lrcfmd/RankingPhaseFields',
       author='Andrij Vasylenko',
       author_email='and.vasylenko@gmail.com',
       license='MIT',
