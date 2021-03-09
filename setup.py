@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='rankfields',
-      version='0.1',
+      version='0.1.1',
       description='Ranking phase fields with likelihood of finding a stable composition',
       url='http://github.com/lrcfmd/RankingPhaseFields',
       author='Andrij Vasylenko',
