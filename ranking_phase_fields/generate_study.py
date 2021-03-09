@@ -15,7 +15,7 @@ def permute(vectors):
     return permuted
 
 def augment(chain, vec):
-    p = map(lambda val: chain + [val] if type(chain) is list else [chain] + [val], vec)
+    p = map(lambda val: chain + [val] if isinstance(chain, list) else [chain] + [val], vec)
     return [i for i in p]
 
 def generate_study(phase_fields, lists, training):
@@ -46,12 +46,15 @@ def generate_study(phase_fields, lists, training):
     return study
 
 if __name__ == "__main__":
+    from parse_icsd import *
+    import sys
     try:
         ffile = sys.argv[1]
     except:
         print('Provide list of elements of interest in the input file. Usage: python generate_study.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_input()
+        ffile = 'rpp.input'
+    params = parse_input(ffile)
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
     testing = generate_study(params['phase_fields'], params['elements_test'], training) 

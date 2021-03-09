@@ -10,6 +10,7 @@
 #    binaries
 #    ternaries
 #    quaternaries
+#    quinaries
 #    etc. with the specified ox. states
 # 3) AE, VAE and other models can be trained on the training set
 # for detection of the outliers in the training and testing sets
@@ -28,7 +29,7 @@ from ranking_phase_fields.models import *
 from ranking_phase_fields.train_and_validate import *
 
 
-def main(input_file):
+def main(input_file='rpp.input'):
     ''' Main routine '''
     print("========================================================")
     print("RANKING OF THE PHASE FIELDS BY LIKELIHOOD WITH ICSD DATA \n")
@@ -47,12 +48,12 @@ def main(input_file):
 
     # model training: 
     trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), params['average_runs'])
+                                                 params['average_runs'])
 
     # 5-fold cross validation:
     if params['cross-validate'] == 'True':
         validate(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), threshold, nnet)
+                 threshold, nnet)
 
     # data augmentation by permutation
     testing = permute(testing)

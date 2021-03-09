@@ -3,6 +3,7 @@ import numpy as np
 from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
+from parse_icsd import *
 from ranking_phase_fields.models import *
 # Import all models
 from pyod.models.auto_encoder import AutoEncoder
@@ -45,8 +46,9 @@ def choose_model(model, nnet):
     }
     return clfs[model]
 
-def train_model(phase_fields, features, x_train, model, natom, average):
+def train_model(phase_fields, features, x_train, model, average):
     """ train model assess scores for training data and calculate outlier threshold """
+    natom = max([len(phase) for phase in phase_fields])
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
             natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
@@ -55,6 +57,10 @@ def train_model(phase_fields, features, x_train, model, natom, average):
     net = vec2name(ndes, natom)
     x_ = permute(x_train)
     x_ = sym2num(x_, features)
+    if phase_fields == 'quinary':
+        x_ = np.array(pad(x_))
+    else:
+        x_ = np.array(x_)
     print(f"Training of {model} model")
     print(f"Assessing the scores in the training dataset")
     print('=============================================')

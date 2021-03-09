@@ -67,6 +67,7 @@ def parse_input(inputfile='rpp.input'):
     assign_params(params, input_params, 'cations_train')
     assign_params(params, input_params, 'cation1_test')
     assign_params(params, input_params, 'cation2_test')
+    assign_params(params, input_params, 'cation3_test')
     assign_params(params, input_params, 'anion1_test')
     assign_params(params, input_params, 'anion2_test')
     assign_params(params, input_params, 'method')
@@ -84,17 +85,21 @@ def parse_input(inputfile='rpp.input'):
         input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test'], input_params['anion2_test']]
     elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 1:
         input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test']]
-    else:
+    elif input_params['phase_fields'] == 'quaternary':
         input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test'], input_params['anion2_test']]
+    elif input_params['phase_fields'] == 'quinary':
+        input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['cation3_test'],
+                                         input_params['anion1_test'], input_params['anion2_test']]
 
     input_params.pop('cation1_test') 
     input_params.pop('cation2_test') 
+    input_params.pop('cation3_test') 
     input_params.pop('anion1_test') 
     input_params.pop('anion2_test') 
     return input_params
 
 def numatoms(phase_fields):
-    nums = {'binary': 2, 'ternary': 3, 'quaternary': 4}
+    nums = {'binary': 2, 'ternary': 3, 'quaternary': 4, 'quinary': 5}
     return nums[phase_fields]
 
 def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
@@ -102,7 +107,10 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
     print(f'Reading ICSD list {icsd}')
     print(f'for {phase_fields} phase fields with {nanions_train} anions...')
     lines = open(icsd, 'r+').readlines()
-    nanions = int(nanions_train)
+    if isinstance(nanions_train, int):
+        nanions = [nanions_train]
+    else:
+        nanions = [int(i) for i in nanions_train] 
     if cations_train == 'all':
         cations_train = symbols
     if anions_train == 'all':
@@ -113,9 +121,11 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
     for i in lines:
         #print('Processing line {}'.format(i.strip()))
         oxi,field = [],[]
-        # check the composition belongs to the chosen phase fields types:
+        # check the composition belongs to the chosen phase fields types
+        # for quinaries - pad the vectors
         if len(i.split()) != numatoms(phase_fields) + 1:
             continue
+
         # read elements of a composition
         for n in range(1, len(i.split())):
             el = list(i.split()[n])
@@ -132,10 +142,9 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
             continue
 
         # check there is a right number of anions in a composition:
-        if nanions != 0:
-            if len(set(oxi) & set(anions)) == nanions and sorted(field) not in fields:
-                fields.append(sorted(field))
-        elif sorted(field) not in fields:
+        if not any(nanions) and sorted(field) not in fields:
+            fields.append(sorted(field))
+        elif len(set(oxi) & set(anions)) in nanions and sorted(field) not in fields:
             fields.append(sorted(field))
     
     if os.path.isfile(f"{phase_fields}_training_set.dat"):
@@ -150,11 +159,15 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
     return fields 
 
 if __name__ == "__main__":
+    import sys
     try: 
         ffile = sys.argv[1]
     except:
         print('Provide list of elements of interest in the input file. Usage: python parse_icsd.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_input()
+        ffile = 'rpp.input'
+        pass
+   
+    params = parse_input(ffile)
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
