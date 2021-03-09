@@ -4,7 +4,7 @@
 # Setuptools distribution folder.
 /dist/
 /build/
-/ranking_env/
+/fields_env/
 rankfields
 
 # Python egg metadata, regenerated from source files by setuptools.
