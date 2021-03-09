@@ -13,7 +13,7 @@ setup(name='rankfields',
       license='MIT',
       packages=['ranking_phase_fields'],
       install_requires=['pyod','numpy','tensorflow'],
-      python_requires='>=3.8, <3.9',
+      python_requires='>=3.7, <3.9',
       include_package_data=True,
       entry_points={"console_scripts": ["ranking_phase_fields=ranking_phase_fields.__main__:main"]},  
       zip_safe=False)
