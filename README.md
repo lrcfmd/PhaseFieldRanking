@@ -24,7 +24,7 @@ PyOD (0.7.8 or later)
 Dependencies can be installed automatically during installation.
 
 ## Installation
-`pip install .`
+`pip install rankfields`
 
 ## Usage
 `python ranking_phase_fields.py` <input_file>
