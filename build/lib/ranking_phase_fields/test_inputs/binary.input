@@ -1,0 +1,11 @@
+icsd_file      : icsd2017
+phase_fields   : binary
+cations_train  : all
+anions_train   : all
+nanions_train  : 0
+cation1_test   : all
+anion1_test    : all
+method         : VAE
+cross-validate : False
+average_runs   : 1
+features       : Pettifor, Number, AtomicVolume, AtomicWeight, BCCbandgap, BCCefflatcnt, BCCenergydiff, BCCenergy_pa, BCCfermi, BCCmagmom, BCCvolume_padiff, BCCvolume_pa, Column, CovalentRadius,Electronegativity, FirstIonizationEnergy, GSbandgap, GSefflatcnt, GSenergy_pa, GSestBCClatcnt, GSestFCClatcnt, GSmagmom, GSvolume_pa, ICSDVolume, MendeleevNumber, NdUnfilled, NdValence, NfUnfilled, NfValence, NpUnfilled, NpValence, NsUnfilled, NsValence, NUnfilled, NValance, Polarizability, Row

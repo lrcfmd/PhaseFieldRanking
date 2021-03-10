@@ -1,5 +1,7 @@
 import numpy as np
 from ranking_phase_fields.symbols import *
+from ranking_phase_fields.numberedsymbols import *
+#from numberedsymbols import *
 
 def read_features(f):
     lines = open(f,'r').readlines()
@@ -36,3 +38,9 @@ def num2sym(number, feature):
     numbers = [str(int(num)) for num in read_features(f'TABLES/{feature}.table')]
     dic = {num: sym for num, sym in zip(numbers, symbols)}
     return dic[str(int(number))]
+
+def unpet(vector):
+    vector = sorted(list(map(int, vector)))
+    return ' '.join(list(numberedsymbols[vector]))
+
+#print(unpet(np.array([3.0, 4, 3.0])))

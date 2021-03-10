@@ -27,7 +27,7 @@ from pyod.models.mcd import MCD
 def choose_model(model, nnet):
     """ among implemented in PyOD """
     clfs = {
-    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
+    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=4),
     'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=15),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
@@ -48,7 +48,7 @@ def choose_model(model, nnet):
 
 def train_model(phase_fields, features, x_train, model, average):
     """ train model assess scores for training data and calculate outlier threshold """
-    natom = max([len(phase) for phase in phase_fields])
+    natom = 5 #max([len(phase) for phase in phase_fields])
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
             natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
@@ -57,8 +57,10 @@ def train_model(phase_fields, features, x_train, model, average):
     net = vec2name(ndes, natom)
     x_ = permute(x_train)
     x_ = sym2num(x_, features)
+
     if phase_fields == 'quinary':
-        x_ = np.array(pad(x_))
+#        x_ = np.array(pad(x_))
+        x_ = np.array(x_)
     else:
         x_ = np.array(x_)
     print(f"Training of {model} model")
@@ -72,8 +74,9 @@ def train_model(phase_fields, features, x_train, model, average):
         print(f"Writing training scores to {phase_fields}_{model}_training_scores.csv")
         thr_ar = 0.5*np.ones(len(scores))
         train_scaled  = scale(scores)
-        training_results = average_permutations(natom, x_, features[0], scores, train_scaled, net)
-        getout(training_results, f'{phase_fields}_{model}_training_scores.csv', 'Norm. scores')
+        reduce_permutations(x_, scores, train_scaled, net,  f'{phase_fields}_{model}_training_scores.csv')
+       #training_results = average_permutations(natom, x_, features[0], scores, train_scaled, net)
+       #getout(training_results, f'{phase_fields}_{model}_training_scores.csv', 'Norm. scores')
 
     return x_, clf, threshold, nnet
 
@@ -116,18 +119,19 @@ if __name__ == "__main__":
     try:
         ffile = sys.argv[1]
     except:
+        ffile = 'rpp.input'
         print('Provide list of elements of interest in the input file. Usage: python generate_study.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_input()
+    params = parse_input(ffile)
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
-    testing = generate_study(params['phase_fields'], params['elements_test'], training)
-    print(f"Representing each element with {len(params['features'])} features.")
-    print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
+   #testing = generate_study(params['phase_fields'], params['elements_test'], training)
+   #print(f"Representing each element with {len(params['features'])} features.")
+   #print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
     print("==============================================")
     trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
-    numatoms(params['phase_fields']), params['average_runs'])
-    print(f"Validation the {params['method']} in 5-fold cross validation.")
-    # 5-fold cross validation:
-    validate(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), threshold, nnet)
+       params['average_runs'])
+   #print(f"Validation the {params['method']} in 5-fold cross validation.")
+   ## 5-fold cross validation:
+   #validate(params['phase_fields'], params['features'], training, params['method'], \
+   #    numatoms(params['phase_fields']), threshold, nnet)

@@ -6,6 +6,7 @@
 import os, sys
 from ranking_phase_fields.parse_icsd import *
 from itertools import permutations as pmts
+from itertools import product as P
 
 def permute(vectors):
     permuted = []
@@ -14,9 +15,20 @@ def permute(vectors):
         permuted += p 
     return permuted
 
+def product(lists):
+    return [ p for p in P(*lists)]
+
 def augment(chain, vec):
     p = map(lambda val: chain + [val] if isinstance(chain, list) else [chain] + [val], vec)
     return [i for i in p]
+
+def check_unique(field, lists, training):
+    study = []
+    for f in field:
+        # check elements are unique
+        if len(set(f)) == len(lists) and sorted(f) not in training and sorted(f) not in study:
+            study.append(sorted(f))
+    return study
 
 def generate_study(phase_fields, lists, training):
     print (f'Creating testing data for unexplored {phase_fields} phase fields:')
@@ -46,8 +58,8 @@ def generate_study(phase_fields, lists, training):
     return study
 
 if __name__ == "__main__":
-    from parse_icsd import *
-    import sys
+    from pprint import pprint
+
     try:
         ffile = sys.argv[1]
     except:
@@ -55,6 +67,9 @@ if __name__ == "__main__":
         print('Reading default parameters from rpp.input')
         ffile = 'rpp.input'
     params = parse_input(ffile)
+
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
+
     testing = generate_study(params['phase_fields'], params['elements_test'], training) 
+    pprint(testing)

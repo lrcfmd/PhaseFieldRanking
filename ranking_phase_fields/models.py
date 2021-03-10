@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 from ranking_phase_fields.symbols import *
 from ranking_phase_fields.features import *
@@ -7,7 +8,7 @@ def vec2name(ndes, natom):
     """ get index of the first feature for each element """
     v = []
     for i in range(natom):
-        v += [ndes * i]
+        v += [ndes * i + 1] # +1 - second feature
     return v 
 
 def scale(data):
@@ -21,6 +22,16 @@ def mse(instance, aver):
     for i in er:
         s += i
     return np.sqrt(s)/aver
+
+def reduce_permutations(data, scores, scaled, nnet, ffile):
+   scores = [round(i,3) for i in scores]
+   scaled = [round(i,3) for i in scaled]
+   
+   if isinstance(data, list): data = np.array(data)
+   df = pd.DataFrame({'vectors':[i for i in data[:,nnet]], 'scores':scores, 'scaled': scaled})
+   df['vectors'] = df['vectors'].apply(lambda x: unpet(x))
+   df = df.drop_duplicates(subset=['vectors'])
+   df.to_csv(ffile, index=False)
 
 def average_permutations(natom, data, feature, scores, var, nnet):
     """ average scores for permutations """
@@ -59,8 +70,9 @@ def rank(clft, phase_fields, features, x_train, x_test, model, natom, average=1)
         y_test_scores = clft.decision_function(x_test)
         y_test_scaled = scale(y_test_scores)
         print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
-        results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
-        getout(results, f'{phase_fields}_{model}_test_scores.csv', 'Norm. score')
+        reduce_permutations(x_test, y_test_scores, y_test_scaled, net, f'{phase_fields}OS_{model}_testing_scores.csv')
+       #results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
+       #getout(results, f'{phase_fields}_{model}_test_scores.csv', 'Norm. score')
 
     else:
         y_test_scores = np.zeros(len(x_test))

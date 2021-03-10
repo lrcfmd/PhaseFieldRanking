@@ -160,6 +160,7 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
 
 if __name__ == "__main__":
     import sys
+    from symbols import *
     try: 
         ffile = sys.argv[1]
     except:

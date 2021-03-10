@@ -74,4 +74,9 @@ def main(input_file='rpp.input'):
     print("Finalising and exiting.")
 
 if __name__ == "__main__":
-    main()
+    try:
+        ff = sys.argv[1]
+    except:
+        rpp.input   
+
+    main(ff)
