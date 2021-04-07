@@ -4,8 +4,10 @@
 # Setuptools distribution folder.
 /dist/
 /build/
-/fields_env/
-rankfields
+/env_forranking/
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+
+# packaging readme
+packaging_readme

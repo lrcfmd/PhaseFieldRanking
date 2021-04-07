@@ -21,16 +21,18 @@ TensorFlow (version 2.0 or later)
 
 PyOD (0.7.8 or later)
 
+scikit-learn-0.20.0
+
 Dependencies can be installed automatically during installation.
 
 ## Installation
 `pip install rankfields`
 
 ## Usage
-`python ranking_phase_fields.py` <input_file>
+`rankfields` <input_file>
 
 If no input file provided the run is equivalent to
-`python ranking_phase_fields.py rpp.input`
+`rankfields rpp.input`
 
 and should reproduce results for Supplementary Table S3.
 

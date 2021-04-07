@@ -5,7 +5,7 @@ from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
 from ranking_phase_fields.models import *
 # Import all models
-#from pyod.models.auto_encoder import AutoEncoder
+from pyod.models.auto_encoder import AutoEncoder
 from pyod.models.vae import VAE
 from pyod.models.abod import ABOD
 from pyod.models.feature_bagging import FeatureBagging
@@ -26,7 +26,7 @@ from pyod.models.mcd import MCD
 def choose_model(model, nnet):
     """ among implemented in PyOD """
     clfs = {
-#    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
+    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
     'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=13),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
