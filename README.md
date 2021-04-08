@@ -31,10 +31,9 @@ Dependencies can be installed automatically during installation.
 ## Usage
 `rankfields` <input_file>
 
-If no input file provided the run is equivalent to
-`rankfields rpp.input`
+E.g., `rankfields rpp.input`
 
-and should reproduce results for Supplementary Table S3.
+should reproduce results for Supplementary Table S3.
 
 The results for this and other example runs with inputs from `ranking_phase_fields/test_input/`
 are copied in `ranking_phase_fields/test_results/`
