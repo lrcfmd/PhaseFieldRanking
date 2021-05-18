@@ -2,6 +2,8 @@
 
 13.08.2020 Andrij Vasylenko
 
+![alt text](https://github.com/lrcmd/PhaseFieldRanking/TOC.png)
+
 ## Introduction
 
 In materials science, selection of 118 chemical elements to combine ultimately determines whether a elemental combination (called phase field) can form a stable compound. The combinatorial challenge is overwhelming, e.g., there are 118! / (3! * 115!) = 266916 possible ternary phase fields, with only a fraction of them explored synthetically. While scientists with accumulated knowledge of chemistry of materials can argue, that many combinations can afford stable compounds, depending on the particular stoichiometric ratios, it is still impossible to prioritise the likely attractive combinations.
