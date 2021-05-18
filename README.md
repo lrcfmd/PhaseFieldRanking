@@ -2,6 +2,12 @@
 
 13.08.2020 Andrij Vasylenko
 
+## Introduction
+
+In materials science, selection of 118 chemical elements to combine ultimately determines whether a elemental combination (called phase field) can form a stable compound. The combinatorial challenge is overwhelming, e.g., there are 118! / (3! * 115!) = 266916 possible ternary phase fields, with only a fraction of them explored synthetically. While scientists with accumulated knowledge of chemistry of materials can argue, that many combinations can afford stable compounds, depending on the particular stoichiometric ratios, it is still impossible to prioritise the likely attractive combinations.
+
+This model (PhaseRank) affords numerical assesment of the phase fields based on the knowledge exctracted with unsupervised learning of the Inorganic Crystal Structure Database (ICSD) of materials, and ranks the unexplored chemistry by similarity with the materials found in ICSD.
+
 ## Requirements
 
 python-3.8
