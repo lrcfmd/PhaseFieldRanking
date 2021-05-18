@@ -2,7 +2,7 @@
 
 13.08.2020 Andrij Vasylenko
 
-![alt text](https://github.com/lrcmd/PhaseFieldRanking/blob/master/TOC.png)
+![TOC](https://github.com/lrcfmd/PhaseFieldRanking/blob/master/TOC.png)
 
 ## Introduction
 
