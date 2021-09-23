@@ -95,4 +95,4 @@ numberedsymbols = np.array([
 'Pu',
 'Am',
 'Cm',
-])
+'0'])

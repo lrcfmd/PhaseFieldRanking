@@ -1,14 +1,17 @@
 """ From the lists of elements of interest
 (e.g. for cations and anions) generate a list of phase fields
-(binary, ternary or quaternary) that have not yet been explored
-(don't have associated compounds reported in ICSD)
+(binary, ternary, etc.) that have not yet been explored
+i.e. don't have associated compounds reported in ICSD
 """
 import os, sys
 from ranking_phase_fields.parse_icsd import *
 from itertools import permutations as pmts
 from itertools import product as P
 
-def permute(vectors):
+def permute(vector):
+    return [list(i) for i in pmts(vector)]
+
+def permute_all(vectors):
     permuted = []
     for v in vectors:
         p = [list(i) for i in pmts(v)]
@@ -19,8 +22,7 @@ def product(lists):
     return [ p for p in P(*lists)]
 
 def augment(chain, vec):
-    p = map(lambda val: chain + [val] if isinstance(chain, list) else [chain] + [val], vec)
-    return [i for i in p]
+    return list(map(lambda val: chain + [val] if isinstance(chain, list) else [chain] + [val], vec))
 
 def check_unique(field, lists, training):
     study = []
@@ -35,9 +37,9 @@ def generate_study(phase_fields, lists, training):
 
     field = lists[0]
 
-    # aument fields with elements from lists recursively
+    # augment the fields with elements from the lists recursively
     for i in range(1, len(lists)):
-        field = [ r for s in map(lambda el: augment(el, lists[i]), field) for r in s]
+        field = [ r for s in map(lambda el: augment(el, lists[i]), field) for r in s ]
 
     study = []
     for f in field:

@@ -62,8 +62,6 @@ def getout(results, fname, mode):
 def rank(clft, phase_fields, features, x_train, x_test, model, natom, average=1):
     """ train a model on x_train and predict x_test """
     ndes = len(features)
-    nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
-            natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
     net = vec2name(ndes, natom)   
 
     if average == 1:

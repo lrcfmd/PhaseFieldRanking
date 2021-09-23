@@ -3,13 +3,12 @@ import numpy as np
 from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
-from parse_icsd import *
 from ranking_phase_fields.models import *
 # Import all models
 from pyod.models.auto_encoder import AutoEncoder
 from pyod.models.vae import VAE
 from pyod.models.abod import ABOD
-from pyod.models.feature_bagging import FeatureBagging
+#from pyod.models.feature_bagging import FeatureBagging
 from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
 from pyod.models.knn import KNN
@@ -23,12 +22,14 @@ from pyod.models.cblof import CBLOF
 from pyod.models.sod import SOD
 from pyod.models.loci import LOCI
 from pyod.models.mcd import MCD
+# save and load
+from joblib import dump, load
 
 def choose_model(model, nnet):
     """ among implemented in PyOD """
     clfs = {
     'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=4),
-    'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=15),
+    'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=55),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
     'HBOS'           : HBOS(),
@@ -46,27 +47,19 @@ def choose_model(model, nnet):
     }
     return clfs[model]
 
-def train_model(phase_fields, features, x_train, model, average):
+def train_model(x_train, natom, features, model, average):
     """ train model assess scores for training data and calculate outlier threshold """
-    natom = 5 #max([len(phase) for phase in phase_fields])
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
             natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
 
     clf = choose_model(model, nnet)
     net = vec2name(ndes, natom)
-    x_ = permute(x_train)
-    x_ = sym2num(x_, features)
 
-    if phase_fields == 'quinary':
-#        x_ = np.array(pad(x_))
-        x_ = np.array(x_)
-    else:
-        x_ = np.array(x_)
     print(f"Training of {model} model")
     print(f"Assessing the scores in the training dataset")
     print('=============================================')
-    clf.fit(x_)
+    clf.fit(x_train)
     scores = np.array(clf.decision_scores_)
     threshold = 0.5 * (max(scores) + min(scores))
     
@@ -74,11 +67,14 @@ def train_model(phase_fields, features, x_train, model, average):
         print(f"Writing training scores to {phase_fields}_{model}_training_scores.csv")
         thr_ar = 0.5*np.ones(len(scores))
         train_scaled  = scale(scores)
-        reduce_permutations(x_, scores, train_scaled, net,  f'{phase_fields}_{model}_training_scores.csv')
-       #training_results = average_permutations(natom, x_, features[0], scores, train_scaled, net)
-       #getout(training_results, f'{phase_fields}_{model}_training_scores.csv', 'Norm. scores')
+        reduce_permutations(x_train, scores, train_scaled, net,  f'{phase_fields}_{model}_training_scores.csv')
 
-    return x_, clf, threshold, nnet
+    print(f'Saving model to {model}.joblib')
+    dump(clf, f'{model}.joblib')
+    # for loading:
+    #clf = load('clf.joblib')
+
+    return x_train, clf, threshold, nnet
 
 
 def validate(phase_fields, features, x_train, model, natom, threshold, nnet):

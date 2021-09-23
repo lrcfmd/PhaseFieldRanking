@@ -1,0 +1,14 @@
+#!python
+
+import sys
+import pkg_resources
+import ranking_phase_fields.__main__ as main
+
+if __name__=="__main__":
+    try:
+        input_file = sys.argv[1]
+    except Exception:
+        print("Usage: python ranking_phase_fields.py <input_file>")
+        print("Reading default settings from rpp.input")
+        input_file = pkg_resources.resource_stream(__name__,'rpp.input')
+    main.main(input_file)

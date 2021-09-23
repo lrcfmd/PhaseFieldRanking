@@ -164,6 +164,7 @@ N. J. Phys. 18, 093011 (2016). https://doi.org/10.1088/1367-2630/18/9/093011
 ---|--- 
  *icsd_file*    | (default: icsd2017) ICSD excerpt. A text file, a list of ICSD .cif files with specified oxidation states for each element.
 *phase_fields*  | (default: quaternary) binary, ternary, quaternary - are supported. Type of phase fields to investigate.
+*train_fields*  | (default: all)  binary, ternary, quaternary - are supported. Type of phase fields, on which to train the model.
 *cations_train* | (default: all) list of elements constituting a phase field in ICSD. Elements in the first positions (cations), e.g. elements for M and M' in MM'AA' phase fields.
 *anions_train*  | (default: S,O,Cl,Br,F,N,Te,P,Se,As,I) list of elements constituting a phase field in ICSD. Elements in the last positions (anions) e.g. elements for A and A' in MM'AA' phase fields. 
 *nanions_train* | (default: 2) Number of anions (elements with negative oxidation states as specified in icsd_file) in the training set. Supported values: 0, 1, 2. If 0 - oxidation states are not taken into account.

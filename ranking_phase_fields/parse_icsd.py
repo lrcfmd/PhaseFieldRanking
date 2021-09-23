@@ -35,8 +35,10 @@ def assign_params(params, input_params, name):
             input_params[name] ='VAE'
         elif name == 'phase_fields':
             input_params[name] = 'quaternary'
+        elif name == 'train_fields':
+            input_params[name] = 'all fields'
         elif name == 'icsd_file':
-            input_params[name] = 'icsd2017'
+            input_params[name] = 'icsd2021_phases.csv'
         elif name == 'features':
             input_params[name] ='Pettifor'
         elif name == 'average':
@@ -74,11 +76,12 @@ def parse_input(inputfile='rpp.input'):
     assign_params(params, input_params, 'cross-validate')
     assign_params(params, input_params, 'average_runs')
     assign_params(params, input_params, 'features')
+    assign_params(params, input_params, 'train_fields')
 
     for k,v in input_params.items():
         print(f'{k:15} : {v}')
 
-#   castomise testing elements for phase fields cases:
+    #   customise testing elements for phase fields cases:
     if input_params['phase_fields'] == 'binary':
         input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test']]
     elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 2:
@@ -102,50 +105,22 @@ def numatoms(phase_fields):
     nums = {'binary': 2, 'ternary': 3, 'quaternary': 4, 'quinary': 5}
     return nums[phase_fields]
 
-def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
+def parse_icsd(phase_fields, train_fields, icsd):
     print("==============================================")
     print(f'Reading ICSD list {icsd}')
-    print(f'for {phase_fields} phase fields with {nanions_train} anions...')
+    print(f'for {phase_fields} phase fields...')
     lines = open(icsd, 'r+').readlines()
-    if isinstance(nanions_train, int):
-        nanions = [nanions_train]
-    else:
-        nanions = [int(i) for i in nanions_train] 
-    if cations_train == 'all':
-        cations_train = symbols
-    if anions_train == 'all':
-        anions_train = symbols
-    anions = [a+'-' for a in anions_train]
+    
     fields = []
 
     for i in lines:
-        #print('Processing line {}'.format(i.strip()))
-        oxi,field = [],[]
+        field = i.split()
         # check the composition belongs to the chosen phase fields types
-        # for quinaries - pad the vectors
-        if len(i.split()) != numatoms(phase_fields) + 1:
+        if train_fields != 'all fields' and len(fields) != numatoms(phase_fields):
             continue
-
         # read elements of a composition
-        for n in range(1, len(i.split())):
-            el = list(i.split()[n])
-            sym = el[0]
-            if not el[1].isdigit(): 
-                sym += el[1]
-            ox = sym + el[-1]
-            if sym not in cations_train + anions_train:
-                break
-            field.append(sym)
-            oxi.append(ox)
-        #check if the elements / cations are right:
-        if len(field) != numatoms(phase_fields):
-            continue
-
-        # check there is a right number of anions in a composition:
-        if not any(nanions) and sorted(field) not in fields:
-            fields.append(sorted(field))
-        elif len(set(oxi) & set(anions)) in nanions and sorted(field) not in fields:
-            fields.append(sorted(field))
+        if not set(field).difference(set(symbols)):
+            fields.append(field)
     
     if os.path.isfile(f"{phase_fields}_training_set.dat"):
         print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
@@ -170,5 +145,4 @@ if __name__ == "__main__":
         pass
    
     params = parse_input(ffile)
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'])
+    training = parse_icsd(params['phase_fields'], params['train_fields'],  params['icsd_file'])

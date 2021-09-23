@@ -21,6 +21,7 @@
 
 import sys
 import numpy as np
+import pandas as pd
 from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
@@ -39,37 +40,50 @@ def main(input_file='rpp.input'):
     print("=========================================================")
     
     # parce input file
+    print("Parsing input...")
     params = parse_input(input_file)    
     # exctract training and generate testing set
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'])
-    
+    training = parse_icsd(params['phase_fields'], params['train_fields'], params['icsd_file'])
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
 
-    # model training: 
-    trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
-                                                 params['average_runs'])
-
-    # 5-fold cross validation:
-    if params['cross-validate'] == 'True':
-        validate(params['phase_fields'], params['features'], training, params['method'], \
-                 threshold, nnet)
-
-    # data augmentation by permutation
-    testing = permute(testing)
-    #print(f"Training set: {len(trained)} {params['phase_fields']} phase fields")
-    #print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
-    print("==============================================")
-    
     # vectorise phase fields with features
+    print("==============================================")
     print(f"Representing each element with {len(params['features'])} features.")
     print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
     print("==============================================")
-    testing  = sym2num(testing, params['features'])
+
+    # featurize phase fields
+    training = sym2num(training, params['features'])
+    testing = sym2num(testing, params['features'])
+
+    print('Augmenting data by permutations ...')
+    # augment data by permutations:
+    training = list(map(permute,training))
+    print('summing augmented data')
+    training = pd.DataFrame({'phases':training})
+    training['phases'] = training['phases'].sum()
+    print("Saving augmented training data")
+    training.to_csv('icsd2021_permuted.csv', index=None)
+    testing = permute_all(testing)
+
+    print('padding phases with 0 ...')
+    # padd ends with zeros
+    training, natom = pad(training['phases'].values)
+    testing, _ = pad(testing, natom)
+
+    # model training: 
+    trained, clft, threshold, nnet = train_model(training, natom, params['method'], params['average_runs'])
+
+    # 5-fold cross validation:
+    if params['cross-validate'] == 'True':
+        validate(params['phase_fields'], params['features'], training, params['method'], threshold, nnet)
+
+    #print(f"Training set: {len(trained)} {params['phase_fields']} phase fields")
+    #print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
     
     # predict based on the trained model:
     rank(clft, params['phase_fields'], params['features'], trained, testing, params['method'], \
-            numatoms(params['phase_fields']), params['average_runs'])
+            natom, params['average_runs'])
     
     print("Finalising and exiting.")
 

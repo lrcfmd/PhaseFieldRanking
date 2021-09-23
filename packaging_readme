@@ -1,0 +1,10 @@
+# create script (without extension)
+chmod +x rankfields
+
+# add script to setup.py
+
+#create wheels:
+python setup.py bdist_wheel
+
+# upload to 
+python -m twine upload dist/*
