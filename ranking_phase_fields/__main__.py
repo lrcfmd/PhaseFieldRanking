@@ -25,7 +25,6 @@ from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
 from ranking_phase_fields.models import *
-#from ranking_phase_fields.validation import *
 from ranking_phase_fields.train_and_validate import *
 
 
@@ -52,8 +51,7 @@ def main(input_file='rpp.input'):
 
     # 5-fold cross validation:
     if params['cross-validate'] == 'True':
-        validate(params['phase_fields'], params['features'], training, params['method'], \
-                 threshold, nnet)
+        validate(params['phase_fields'], params['features'], training, params['method'],5, threshold, nnet)
 
     # data augmentation by permutation
     testing = permute(testing)

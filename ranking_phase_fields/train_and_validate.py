@@ -3,7 +3,6 @@ import numpy as np
 from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
-from parse_icsd import *
 from ranking_phase_fields.models import *
 # Import all models
 from pyod.models.auto_encoder import AutoEncoder
@@ -27,7 +26,7 @@ from pyod.models.mcd import MCD
 def choose_model(model, nnet):
     """ among implemented in PyOD """
     clfs = {
-    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=4),
+    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
     'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=15),
     'ABOD'           : ABOD(),
     'FeatureBagging' : FeatureBagging(),
@@ -110,8 +109,9 @@ def validate(phase_fields, features, x_train, model, natom, threshold, nnet):
  
         print(f"Validation error of validation set {i}: {round(val_error,2)}%", file=open(f'Validation_{phase_fields}_errors.dat','a'))
         thr_ar = threshold * np.ones(len(prediction))
-        results = average_permutations(natom, val_set, features[0], prediction, thr_ar, net)
-        getout(results, f'Validation_{phase_fields}_{model}_subset{i+1}.csv', 'threshold')
+        reduce_permutations(val_set, prediction, prediction, net, f'Validation_{phase_fields}_{model}_subset{i+1}.csv')
+        #results = average_permutations(natom, val_set, features[0], prediction, thr_ar, net)
+        #getout(results, f'Validation_{phase_fields}_{model}_subset{i+1}.csv', 'threshold')
 
     return 0
 
