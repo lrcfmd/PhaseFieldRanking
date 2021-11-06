@@ -1,5 +1,5 @@
 icsd_file      : icsd2017
-phase_fields   : binary
+phase_fields   : ternary
 cations_train  : all
 anions_train   : all
 nanions_train  : 0

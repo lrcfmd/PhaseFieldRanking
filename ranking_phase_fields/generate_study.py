@@ -4,7 +4,9 @@
 (don't have associated compounds reported in ICSD)
 """
 import os, sys
+#from functools import lru_cache
 from ranking_phase_fields.parse_icsd import *
+#from parse_icsd import *
 from itertools import permutations as pmts
 
 def permute(vectors):
@@ -14,6 +16,7 @@ def permute(vectors):
         permuted += p 
     return permuted
 
+#@lru_cache(maxsize=None) -- lists are unhashable
 def augment(chain, vec):
     p = map(lambda val: chain + [val] if type(chain) is list else [chain] + [val], vec)
     return [i for i in p]
@@ -51,7 +54,15 @@ if __name__ == "__main__":
     except:
         print('Provide list of elements of interest in the input file. Usage: python generate_study.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_input()
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'])
-    testing = generate_study(params['phase_fields'], params['elements_test'], training) 
+        ffile='rpp.input'
+    #params = parse_input(ffile)
+    #training = parse_icsd(params['phase_fields'], params['anions_train'], \
+    #        params['nanions_train'], params['cations_train'], params['icsd_file'])
+    #testing = generate_study(params['phase_fields'], params['elements_test'], training) 
+    M1 =  ['Li']
+    M2 =  ['B', 'Mg', 'Al', 'Si', 'P', 'K', 'Ca', 'Zn', 'Sr', 'Y', 'Zr', 'Sn', 'Ba', 'Ta', 'La']
+    A1 = ['S','O','Cl','Br','I','N','F']
+    A2 = ['S','O','Cl','Br','I','N','F']
+    A3 = ['S','O','Cl','Br','I','N','F']
+    lists = [M1, M2, A1, A2, A3]
+    testing = generate_study('LiMMAA', lists, [])

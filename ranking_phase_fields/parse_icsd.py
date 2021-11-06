@@ -7,8 +7,10 @@
 # to extract the training set from ICSD, and to form a testing set 
 
 import os
+import sys
 from itertools import permutations as pt
 from ranking_phase_fields.symbols import *
+#from symbols import *
 
 def assign_params(params, input_params, name):
     # if in input file
@@ -80,7 +82,7 @@ def parse_input(inputfile='rpp.input'):
 #   castomise testing elements for phase fields cases:
     if input_params['phase_fields'] == 'binary':
         input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test']]
-    elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 2:
+    elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] in [0, 2]:
         input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test'], input_params['anion2_test']]
     elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 1:
         input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test']]
@@ -113,9 +115,11 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
     for i in lines:
         #print('Processing line {}'.format(i.strip()))
         oxi,field = [],[]
-        # check the composition belongs to the chosen phase fields types:
+
+#        # check the composition belongs to the chosen phase fields types:
         if len(i.split()) != numatoms(phase_fields) + 1:
             continue
+
         # read elements of a composition
         for n in range(1, len(i.split())):
             el = list(i.split()[n])
@@ -127,13 +131,14 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
                 break
             field.append(sym)
             oxi.append(ox)
-        #check if the elements / cations are right:
+
+#       #check if the elements / cations are right:
         if len(field) != numatoms(phase_fields):
             continue
 
         # check there is a right number of anions in a composition:
         if nanions != 0:
-            if len(set(oxi) & set(anions)) == nanions and sorted(field) not in fields:
+            if len(set(oxi) & set(anions)) >= nanions and sorted(field) not in fields:
                 fields.append(sorted(field))
         elif sorted(field) not in fields:
             fields.append(sorted(field))
@@ -155,6 +160,7 @@ if __name__ == "__main__":
     except:
         print('Provide list of elements of interest in the input file. Usage: python parse_icsd.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_input()
+        ffile = 'rpp.input'
+    params = parse_input(inputfile=ffile)
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])

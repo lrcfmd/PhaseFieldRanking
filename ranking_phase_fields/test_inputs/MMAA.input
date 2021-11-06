@@ -1,11 +1,12 @@
 icsd_file      : icsd2017
-phase_fields   : binary
+phase_fields   : quaternary
 cations_train  : all
-anions_train   : all
-nanions_train  : 0
-cation1_test   : Mg
-anion1_test    : Ru
-anion2_test    : all
+anions_train   : S,O,Cl,Br,F,N,Te,P,Se,As,I
+nanions_train  : 1
+cation1_test   : B, Mg, Al, Si, P, K, Ca, Zn, Sr, Y, Zr, Sn, Ba, Ta, La
+cation2_test   : B, Mg, Al, Si, P, K, Ca, Zn, Sr, Y, Zr, Sn, Ba, Ta, La,S,O,Cl,Br,I,N,F
+anion1_test    : S,O,Cl,Br,I,N,F
+anion2_test    : S,O,Cl,Br,I,N,F
 method         : VAE
 cross-validate : False
 average_runs   : 1
