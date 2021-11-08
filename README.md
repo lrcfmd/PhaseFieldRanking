@@ -4,6 +4,13 @@
 
 ![TOC](https://github.com/lrcfmd/PhaseFieldRanking/blob/master/TOC.png)
 
+## Citing
+This submission is a part of the research 
+
+A. Vasylenko et al. "Element selection for crystalline inorganic solid discovery guided by unsupervised machine learning of experimentally explored chemistry", Nat. Commun. 12, 1-12 (2021).
+
+When using this code or any of the numerical results in this repository, please cite the above paper approriately.
+
 ## Introduction
 
 In materials science, selection of 118 chemical elements to combine ultimately determines whether a elemental combination (called phase field) can form a stable compound. The combinatorial challenge is overwhelming, e.g., there are 118! / (3! * 115!) = 266916 possible ternary phase fields, with only a fraction of them explored synthetically. While scientists with accumulated knowledge of chemistry of materials can argue, that many combinations can afford stable compounds, depending on the particular stoichiometric ratios, it is still impossible to prioritise the likely attractive combinations.
