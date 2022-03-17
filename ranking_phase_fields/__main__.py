@@ -43,7 +43,7 @@ def main(input_file='rpp.input'):
     print("Parsing input...")
     params = parse_input(input_file)    
     # exctract training and generate testing set
-    training = parse_icsd(params['phase_fields'], params['train_fields'], params['icsd_file'])
+    training = parse_icsd(params['phase_fields'], params['train_fields'], params['icsd_file'], params['anions_train'])
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
 
     # vectorise phase fields with features
@@ -52,27 +52,38 @@ def main(input_file='rpp.input'):
     print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
     print("==============================================")
 
-    # featurize phase fields
-    training = sym2num(training, params['features'])
-    testing = sym2num(testing, params['features'])
+    
+    
+    
 
     print('Augmenting data by permutations ...')
-    # augment data by permutations:
-    training = list(map(permute,training))
-    print('summing augmented data')
-    training = pd.DataFrame({'phases':training})
-    training['phases'] = training['phases'].sum()
-    print("Saving augmented training data")
-    training.to_csv('icsd2021_permuted.csv', index=None)
+    #training = list(map(permute,training))
+    training = permute_all(training)
     testing = permute_all(testing)
 
-    print('padding phases with 0 ...')
+
+
+    #print('summing augmented data')
+    #training = pd.DataFrame({'phases':training})
+    #training['phases'] = training['phases'].sum()
+    #print("Saving augmented training data")
+    #training.to_csv('quinary_training_permuted.csv', index=None)
+    #print('padding phases with 0 ...')
     # padd ends with zeros
-    training, natom = pad(training['phases'].values)
-    testing, _ = pad(testing, natom)
+    #training, natom = pad(training['phases'].values)
+    #testing, _ = pad(testing, natom)
+
+
+    # featurize phase fields
+    print('Feaurizing...')
+    training = sym2num(training, params['features'])
+    print('Training array shape:', training.shape)
+    testing = sym2num(testing, params['features'])
+
+    natom = 5
 
     # model training: 
-    trained, clft, threshold, nnet = train_model(training, natom, params['method'], params['average_runs'])
+    trained, clft, threshold, nnet = train_model(training, natom, params['features'], params['method'], params['average_runs'], 7)
 
     # 5-fold cross validation:
     if params['cross-validate'] == 'True':
@@ -83,7 +94,7 @@ def main(input_file='rpp.input'):
     
     # predict based on the trained model:
     rank(clft, params['phase_fields'], params['features'], trained, testing, params['method'], \
-            natom, params['average_runs'])
+            natom,  params['average_runs'])
     
     print("Finalising and exiting.")
 
@@ -92,5 +103,5 @@ if __name__ == "__main__":
         ff = sys.argv[1]
     except:
         rpp.input   
-
+    print(ff)
     main(ff)

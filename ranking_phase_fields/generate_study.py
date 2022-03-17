@@ -13,7 +13,7 @@ def permute(vector):
 
 def permute_all(vectors):
     permuted = []
-    for v in vectors:
+    for n,v in enumerate(vectors):
         p = [list(i) for i in pmts(v)]
         permuted += p 
     return permuted

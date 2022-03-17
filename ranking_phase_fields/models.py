@@ -67,8 +67,8 @@ def rank(clft, phase_fields, features, x_train, x_test, model, natom, average=1)
     if average == 1:
         y_test_scores = clft.decision_function(x_test)
         y_test_scaled = scale(y_test_scores)
-        print(f"Writing scores to {phase_fields}_{model}_test_scores.csv")
-        reduce_permutations(x_test, y_test_scores, y_test_scaled, net, f'{phase_fields}OS_{model}_testing_scores.csv')
+        print(f"Writing scores to {phase_fields}_test_scores.csv")
+        reduce_permutations(x_test, y_test_scores, y_test_scaled, net, f'{phase_fields}_test_scores.csv')
        #results = average_permutations(natom, x_test, features[0], y_test_scores, y_test_scaled, net)
        #getout(results, f'{phase_fields}_{model}_test_scores.csv', 'Norm. score')
 

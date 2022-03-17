@@ -1,0 +1,13 @@
+icsd_file      : icsd2017
+phase_fields   : quaternary
+cations_train  : Ni,Sb,Cs,Ba,Zn,Y,Li,Hg,Ra,Co,V,Ac,Ga,Tl,Bi,Mg,K,Sn,Mn,Sc,Fe,Cd,Na,Sr,Cu,Ge,Ag,Al,In,Te,Ca,Au,Ti,Cr,Rb,As,Si,La,Pb,Po
+anions_train   : Br,Se,F,Cl,I,O,S,P
+nanions_train  : 2
+cation1_test   : Li, Bi, Zn
+cation2_test   : Li, Bi, Zn
+anion1_test    : O, S, Se, F, Cl, Br, I, P
+anion2_test    : O, S, Se, F, Cl, Br, I, P
+method         : VAE
+cross-validate : False
+average_runs   : 1
+features       : Pettifor, Number, AtomicVolume, AtomicWeight, BCCbandgap, BCCefflatcnt, BCCenergydiff, BCCenergy_pa, BCCfermi, BCCmagmom, BCCvolume_padiff, BCCvolume_pa, Column, CovalentRadius,Electronegativity, FirstIonizationEnergy, GSbandgap, GSefflatcnt, GSenergy_pa, GSestBCClatcnt, GSestFCClatcnt, GSmagmom, GSvolume_pa, ICSDVolume, MendeleevNumber, NdUnfilled, NdValence, NfUnfilled, NfValence, NpUnfilled, NpValence, NsUnfilled, NsValence, NUnfilled, NValance, Polarizability, Row

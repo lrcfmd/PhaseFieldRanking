@@ -8,7 +8,11 @@
 
 import os
 from itertools import permutations as pt
-from ranking_phase_fields.symbols import *
+try:
+    from ranking_phase_fields.symbols import *
+except:
+    from symbols import *
+
 
 def assign_params(params, input_params, name):
     # if in input file
@@ -105,7 +109,15 @@ def numatoms(phase_fields):
     nums = {'binary': 2, 'ternary': 3, 'quaternary': 4, 'quinary': 5}
     return nums[phase_fields]
 
-def parse_icsd(phase_fields, train_fields, icsd):
+def field_conditions(field, fields, anions_train):
+    if not set(field).difference(set(symbols)) and \
+      field not in fields and len(set(field)) == 5 and \
+      len(set(field).intersection(set(anions_train))) >= 2:
+        return True
+    else: 
+        return False
+
+def parse_icsd(phase_fields, train_fields, icsd, anions_train):
     print("==============================================")
     print(f'Reading ICSD list {icsd}')
     print(f'for {phase_fields} phase fields...')
@@ -114,12 +126,17 @@ def parse_icsd(phase_fields, train_fields, icsd):
     fields = []
 
     for i in lines:
-        field = i.split()
+        field = i.split()[1:]
+        field = [''.join([a for a in i if a.isalpha()]) for i in field]
+        field = sorted(field)
         # check the composition belongs to the chosen phase fields types
-        if train_fields != 'all fields' and len(fields) != numatoms(phase_fields):
+        #if train_fields != 'all fields' and len(fields) != numatoms(phase_fields):
+        if len(field) != numatoms(phase_fields):
             continue
         # read elements of a composition
-        if not set(field).difference(set(symbols)):
+        #print(set(field).difference(set(symbols)))
+
+        if field_conditions(field, fields, anions_train):
             fields.append(field)
     
     if os.path.isfile(f"{phase_fields}_training_set.dat"):
@@ -145,4 +162,8 @@ if __name__ == "__main__":
         pass
    
     params = parse_input(ffile)
-    training = parse_icsd(params['phase_fields'], params['train_fields'],  params['icsd_file'])
+    training = parse_icsd(params['phase_fields'], params['train_fields'],  params['icsd_file'], params['anions_train'])
+    os.remove(f"quinary_training_set.dat")
+    for t in training:
+        for f in pt(t):
+            print(' '.join(list(f)), file=open(f"quinary_training_set.dat", 'a'))

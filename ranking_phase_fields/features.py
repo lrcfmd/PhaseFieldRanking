@@ -33,7 +33,7 @@ def sym2num(data, features):
                 numbers.append(float(dics[i][el]))
         vectors.append(numbers)
 
-    return vectors
+    return np.asarray(vectors)
 
 def num2sym(number, feature):
     numbers = [str(int(num)) for num in read_features(f'TABLES/{feature}.table')]

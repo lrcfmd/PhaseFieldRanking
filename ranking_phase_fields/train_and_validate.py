@@ -25,13 +25,13 @@ from pyod.models.mcd import MCD
 # save and load
 from joblib import dump, load
 
-def choose_model(model, nnet):
+def choose_model(model, nnet, epochs):
     """ among implemented in PyOD """
     clfs = {
-    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=4),
-    'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=55),
+    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=epochs),
+    'VAE'            : VAE(encoder_neurons=nnet[:2], decoder_neurons=nnet[1:], contamination=0.1, epochs=epochs),
     'ABOD'           : ABOD(),
-    'FeatureBagging' : FeatureBagging(),
+#    'FeatureBagging' : FeatureBagging(),
     'HBOS'           : HBOS(),
     'IForest'        : IForest(),
     'KNN'            : KNN(),
@@ -47,13 +47,15 @@ def choose_model(model, nnet):
     }
     return clfs[model]
 
-def train_model(x_train, natom, features, model, average):
+def train_model(x_train, natom, features, model, average, epochs):
     """ train model assess scores for training data and calculate outlier threshold """
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
             natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
-
-    clf = choose_model(model, nnet)
+    nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), 37, int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
+    nnet = [int(ndes*natom), int(ndes*natom), int(ndes*natom/2), 37, int(ndes*natom/2), int(ndes*natom), int(ndes*natom)]
+    nnet = [int(ndes*natom), natom, int(ndes*natom)]
+    clf = choose_model(model, nnet, epochs)
     net = vec2name(ndes, natom)
 
     print(f"Training of {model} model")
@@ -64,13 +66,13 @@ def train_model(x_train, natom, features, model, average):
     threshold = 0.5 * (max(scores) + min(scores))
     
     if average == 1:
-        print(f"Writing training scores to {phase_fields}_{model}_training_scores.csv")
+        print(f"Writing training scores to quinary_training_scores.csv")
         thr_ar = 0.5*np.ones(len(scores))
         train_scaled  = scale(scores)
-        reduce_permutations(x_train, scores, train_scaled, net,  f'{phase_fields}_{model}_training_scores.csv')
+        reduce_permutations(x_train, scores, train_scaled, net, 'quinary_training_scores.csv')
 
-    print(f'Saving model to {model}.joblib')
-    dump(clf, f'{model}.joblib')
+    #print(f'Saving model to {model}.joblib')
+    #dump(clf, f'{model}.joblib')
     # for loading:
     #clf = load('clf.joblib')
 
