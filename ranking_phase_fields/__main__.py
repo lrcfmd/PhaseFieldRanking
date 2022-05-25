@@ -102,6 +102,6 @@ if __name__ == "__main__":
     try:
         ff = sys.argv[1]
     except:
-        rpp.input   
+        ff = 'rpp.input' 
     print(ff)
     main(ff)

@@ -8,7 +8,11 @@
 
 import os
 from itertools import permutations as pt
-from ranking_phase_fields.symbols import *
+try:
+    from ranking_phase_fields.symbols import *
+except:
+    from symbols import *
+
 
 def assign_params(params, input_params, name):
     # if in input file
@@ -35,8 +39,10 @@ def assign_params(params, input_params, name):
             input_params[name] ='VAE'
         elif name == 'phase_fields':
             input_params[name] = 'quaternary'
+        elif name == 'train_fields':
+            input_params[name] = 'all fields'
         elif name == 'icsd_file':
-            input_params[name] = 'icsd2017'
+            input_params[name] = 'icsd2021_phases.csv'
         elif name == 'features':
             input_params[name] ='Pettifor'
         elif name == 'average':
@@ -67,76 +73,71 @@ def parse_input(inputfile='rpp.input'):
     assign_params(params, input_params, 'cations_train')
     assign_params(params, input_params, 'cation1_test')
     assign_params(params, input_params, 'cation2_test')
+    assign_params(params, input_params, 'cation3_test')
     assign_params(params, input_params, 'anion1_test')
     assign_params(params, input_params, 'anion2_test')
     assign_params(params, input_params, 'method')
     assign_params(params, input_params, 'cross-validate')
     assign_params(params, input_params, 'average_runs')
     assign_params(params, input_params, 'features')
+    assign_params(params, input_params, 'train_fields')
 
     for k,v in input_params.items():
         print(f'{k:15} : {v}')
 
-#   castomise testing elements for phase fields cases:
+    #   customise testing elements for phase fields cases:
     if input_params['phase_fields'] == 'binary':
         input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test']]
     elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 2:
         input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test'], input_params['anion2_test']]
     elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 1:
         input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test']]
-    else:
+    elif input_params['phase_fields'] == 'quaternary':
         input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test'], input_params['anion2_test']]
+    elif input_params['phase_fields'] == 'quinary':
+        input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['cation3_test'],
+                                         input_params['anion1_test'], input_params['anion2_test']]
 
     input_params.pop('cation1_test') 
     input_params.pop('cation2_test') 
+    input_params.pop('cation3_test') 
     input_params.pop('anion1_test') 
     input_params.pop('anion2_test') 
     return input_params
 
 def numatoms(phase_fields):
-    nums = {'binary': 2, 'ternary': 3, 'quaternary': 4}
+    nums = {'binary': 2, 'ternary': 3, 'quaternary': 4, 'quinary': 5}
     return nums[phase_fields]
 
-def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
+def field_conditions(field, fields, anions_train):
+    if not set(field).difference(set(symbols)) and \
+      field not in fields and len(set(field)) == 5 and \
+      len(set(field).intersection(set(anions_train))) >= 2:
+        return True
+    else: 
+        return False
+
+def parse_icsd(phase_fields, train_fields, icsd, anions_train):
     print("==============================================")
     print(f'Reading ICSD list {icsd}')
-    print(f'for {phase_fields} phase fields with {nanions_train} anions...')
+    print(f'for {phase_fields} phase fields...')
     lines = open(icsd, 'r+').readlines()
-    nanions = int(nanions_train)
-    if cations_train == 'all':
-        cations_train = symbols
-    if anions_train == 'all':
-        anions_train = symbols
-    anions = [a+'-' for a in anions_train]
+    
     fields = []
 
     for i in lines:
-        #print('Processing line {}'.format(i.strip()))
-        oxi,field = [],[]
-        # check the composition belongs to the chosen phase fields types:
-        if len(i.split()) != numatoms(phase_fields) + 1:
-            continue
-        # read elements of a composition
-        for n in range(1, len(i.split())):
-            el = list(i.split()[n])
-            sym = el[0]
-            if not el[1].isdigit(): 
-                sym += el[1]
-            ox = sym + el[-1]
-            if sym not in cations_train + anions_train:
-                break
-            field.append(sym)
-            oxi.append(ox)
-        #check if the elements / cations are right:
+        field = i.split()[1:]
+        field = [''.join([a for a in i if a.isalpha()]) for i in field]
+        field = sorted(field)
+        # check the composition belongs to the chosen phase fields types
+        #if train_fields != 'all fields' and len(fields) != numatoms(phase_fields):
         if len(field) != numatoms(phase_fields):
             continue
+        # read elements of a composition
+        #print(set(field).difference(set(symbols)))
 
-        # check there is a right number of anions in a composition:
-        if nanions != 0:
-            if len(set(oxi) & set(anions)) == nanions and sorted(field) not in fields:
-                fields.append(sorted(field))
-        elif sorted(field) not in fields:
-            fields.append(sorted(field))
+        if field_conditions(field, fields, anions_train):
+            fields.append(field)
     
     if os.path.isfile(f"{phase_fields}_training_set.dat"):
         print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
@@ -150,11 +151,19 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
     return fields 
 
 if __name__ == "__main__":
+    import sys
+    from symbols import *
     try: 
         ffile = sys.argv[1]
     except:
         print('Provide list of elements of interest in the input file. Usage: python parse_icsd.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_input()
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'])
+        ffile = 'rpp.input'
+        pass
+   
+    params = parse_input(ffile)
+    training = parse_icsd(params['phase_fields'], params['train_fields'],  params['icsd_file'], params['anions_train'])
+    os.remove(f"quinary_training_set.dat")
+    for t in training:
+        for f in pt(t):
+            print(' '.join(list(f)), file=open(f"quinary_training_set.dat", 'a'))

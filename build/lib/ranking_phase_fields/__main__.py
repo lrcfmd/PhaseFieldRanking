@@ -10,6 +10,7 @@
 #    binaries
 #    ternaries
 #    quaternaries
+#    quinaries
 #    etc. with the specified ox. states
 # 3) AE, VAE and other models can be trained on the training set
 # for detection of the outliers in the training and testing sets
@@ -20,6 +21,7 @@
 
 import sys
 import numpy as np
+import pandas as pd
 from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
@@ -28,7 +30,7 @@ from ranking_phase_fields.models import *
 from ranking_phase_fields.train_and_validate import *
 
 
-def main(input_file):
+def main(input_file='rpp.input'):
     ''' Main routine '''
     print("========================================================")
     print("RANKING OF THE PHASE FIELDS BY LIKELIHOOD WITH ICSD DATA \n")
@@ -38,37 +40,61 @@ def main(input_file):
     print("=========================================================")
     
     # parce input file
+    print("Parsing input...")
     params = parse_input(input_file)    
     # exctract training and generate testing set
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'])
-    
+    training = parse_icsd(params['phase_fields'], params['train_fields'], params['icsd_file'], params['anions_train'])
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
 
-    # model training: 
-    trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), params['average_runs'])
-
-    # 5-fold cross validation:
-    if params['cross-validate'] == 'True':
-        validate(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), threshold, nnet)
-
-    # data augmentation by permutation
-    testing = permute(testing)
-    #print(f"Training set: {len(trained)} {params['phase_fields']} phase fields")
-    #print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
-    print("==============================================")
-    
     # vectorise phase fields with features
+    print("==============================================")
     print(f"Representing each element with {len(params['features'])} features.")
     print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
     print("==============================================")
-    testing  = sym2num(testing, params['features'])
+
+    
+    
+    
+
+    print('Augmenting data by permutations ...')
+    #training = list(map(permute,training))
+    training = permute_all(training)
+    testing = permute_all(testing)
+
+
+
+    #print('summing augmented data')
+    #training = pd.DataFrame({'phases':training})
+    #training['phases'] = training['phases'].sum()
+    #print("Saving augmented training data")
+    #training.to_csv('quinary_training_permuted.csv', index=None)
+    #print('padding phases with 0 ...')
+    # padd ends with zeros
+    #training, natom = pad(training['phases'].values)
+    #testing, _ = pad(testing, natom)
+
+
+    # featurize phase fields
+    print('Feaurizing...')
+    training = sym2num(training, params['features'])
+    print('Training array shape:', training.shape)
+    testing = sym2num(testing, params['features'])
+
+    natom = 5
+
+    # model training: 
+    trained, clft, threshold, nnet = train_model(training, natom, params['features'], params['method'], params['average_runs'], 7)
+
+    # 5-fold cross validation:
+    if params['cross-validate'] == 'True':
+        validate(params['phase_fields'], params['features'], training, params['method'], threshold, nnet)
+
+    #print(f"Training set: {len(trained)} {params['phase_fields']} phase fields")
+    #print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
     
     # predict based on the trained model:
     rank(clft, params['phase_fields'], params['features'], trained, testing, params['method'], \
-            numatoms(params['phase_fields']), params['average_runs'])
+            natom,  params['average_runs'])
     
     print("Finalising and exiting.")
 
@@ -76,5 +102,6 @@ if __name__ == "__main__":
     try:
         ff = sys.argv[1]
     except:
-        ff = 'rpp.input'
+        rpp.input   
+    print(ff)
     main(ff)

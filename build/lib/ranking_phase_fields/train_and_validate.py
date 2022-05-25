@@ -5,10 +5,10 @@ from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
 from ranking_phase_fields.models import *
 # Import all models
-#from pyod.models.auto_encoder import AutoEncoder
+from pyod.models.auto_encoder import AutoEncoder
 from pyod.models.vae import VAE
 from pyod.models.abod import ABOD
-from pyod.models.feature_bagging import FeatureBagging
+#from pyod.models.feature_bagging import FeatureBagging
 from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
 from pyod.models.knn import KNN
@@ -22,14 +22,16 @@ from pyod.models.cblof import CBLOF
 from pyod.models.sod import SOD
 from pyod.models.loci import LOCI
 from pyod.models.mcd import MCD
+# save and load
+from joblib import dump, load
 
-def choose_model(model, nnet):
+def choose_model(model, nnet, epochs):
     """ among implemented in PyOD """
     clfs = {
-#    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=15),
-    'VAE'            : VAE(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], contamination=0.1, epochs=13),
+    'AE'             : AutoEncoder(hidden_neurons=nnet, contamination=0.1, epochs=epochs),
+    'VAE'            : VAE(encoder_neurons=nnet[:2], decoder_neurons=nnet[1:], contamination=0.1, epochs=epochs),
     'ABOD'           : ABOD(),
-    'FeatureBagging' : FeatureBagging(),
+#    'FeatureBagging' : FeatureBagging(),
     'HBOS'           : HBOS(),
     'IForest'        : IForest(),
     'KNN'            : KNN(),
@@ -45,31 +47,36 @@ def choose_model(model, nnet):
     }
     return clfs[model]
 
-def train_model(phase_fields, features, x_train, model, natom, average):
+def train_model(x_train, natom, features, model, average, epochs):
     """ train model assess scores for training data and calculate outlier threshold """
     ndes = len(features)
     nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), int(ndes*natom/16), \
             natom, int(ndes*natom/16),  int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
-
-    clf = choose_model(model, nnet)
+    nnet = [int(ndes*natom/2), int(ndes*natom/4), int(ndes*natom/8), 37, int(ndes*natom/8), int(ndes*natom/4), int(ndes*natom/2)]
+    nnet = [int(ndes*natom), int(ndes*natom), int(ndes*natom/2), 37, int(ndes*natom/2), int(ndes*natom), int(ndes*natom)]
+    nnet = [int(ndes*natom), natom, int(ndes*natom)]
+    clf = choose_model(model, nnet, epochs)
     net = vec2name(ndes, natom)
-    x_ = permute(x_train)
-    x_ = sym2num(x_, features)
+
     print(f"Training of {model} model")
     print(f"Assessing the scores in the training dataset")
     print('=============================================')
-    clf.fit(x_)
+    clf.fit(x_train)
     scores = np.array(clf.decision_scores_)
     threshold = 0.5 * (max(scores) + min(scores))
     
     if average == 1:
-        print(f"Writing training scores to {phase_fields}_{model}_training_scores.csv")
+        print(f"Writing training scores to quinary_training_scores.csv")
         thr_ar = 0.5*np.ones(len(scores))
         train_scaled  = scale(scores)
-        training_results = average_permutations(natom, x_, features[0], scores, train_scaled, net)
-        getout(training_results, f'{phase_fields}_{model}_training_scores.csv', 'Norm. scores')
+        reduce_permutations(x_train, scores, train_scaled, net, 'quinary_training_scores.csv')
 
-    return x_, clf, threshold, nnet
+    #print(f'Saving model to {model}.joblib')
+    #dump(clf, f'{model}.joblib')
+    # for loading:
+    #clf = load('clf.joblib')
+
+    return x_train, clf, threshold, nnet
 
 
 def validate(phase_fields, features, x_train, model, natom, threshold, nnet):
@@ -110,18 +117,19 @@ if __name__ == "__main__":
     try:
         ffile = sys.argv[1]
     except:
+        ffile = 'rpp.input'
         print('Provide list of elements of interest in the input file. Usage: python generate_study.py <input_file>')
         print('Reading default parameters from rpp.input')
-    params = parse_input()
+    params = parse_input(ffile)
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
-    testing = generate_study(params['phase_fields'], params['elements_test'], training)
-    print(f"Representing each element with {len(params['features'])} features.")
-    print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
+   #testing = generate_study(params['phase_fields'], params['elements_test'], training)
+   #print(f"Representing each element with {len(params['features'])} features.")
+   #print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
     print("==============================================")
     trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
-    numatoms(params['phase_fields']), params['average_runs'])
-    print(f"Validation the {params['method']} in 5-fold cross validation.")
-    # 5-fold cross validation:
-    validate(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), threshold, nnet)
+       params['average_runs'])
+   #print(f"Validation the {params['method']} in 5-fold cross validation.")
+   ## 5-fold cross validation:
+   #validate(params['phase_fields'], params['features'], training, params['method'], \
+   #    numatoms(params['phase_fields']), threshold, nnet)
