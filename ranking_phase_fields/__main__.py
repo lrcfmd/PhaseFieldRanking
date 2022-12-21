@@ -20,6 +20,7 @@
 
 import sys
 import numpy as np
+import itertools as it
 from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
 from ranking_phase_fields.features import *
@@ -42,7 +43,11 @@ def main(input_file):
     # exctract training and generate testing set
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
-    
+
+    print( "Generating clear outliers - quaternaries of anions: ")
+    print(params['anions_train'])
+    training += [list(i) for i in it.combinations(params['anions_train'], 4)]
+
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
 
     # model training: 

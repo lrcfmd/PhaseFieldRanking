@@ -99,7 +99,7 @@ def numatoms(phase_fields):
     nums = {'binary': 2, 'ternary': 3, 'quaternary': 4}
     return nums[phase_fields]
 
-def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
+def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd, return_dic=False):
     print("==============================================")
     print(f'Reading ICSD list {icsd}')
     print(f'for {phase_fields} phase fields with {nanions_train} anions...')
@@ -112,8 +112,9 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
     anions = [a+'-' for a in anions_train]
     fields = []
 
+    # Dictionary {phase field: number_of_compositions_within}
+
     for i in lines:
-        #print('Processing line {}'.format(i.strip()))
         oxi,field = [],[]
 
 #        # check the composition belongs to the chosen phase fields types:
@@ -138,8 +139,10 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
 
         # check there is a right number of anions in a composition:
         if nanions != 0:
-            if len(set(oxi) & set(anions)) >= nanions and sorted(field) not in fields:
-                fields.append(sorted(field))
+            field = sorted(field)
+            if len(set(oxi) & set(anions)) >= nanions and field not in fields:
+                fields.append(field)
+
         elif sorted(field) not in fields:
             fields.append(sorted(field))
     
@@ -152,7 +155,7 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd):
         print(' '.join(f), file=open(f"{phase_fields}_training_set.dat", 'a'))
 
     print("==============================================")
-    return fields 
+    return fields
 
 if __name__ == "__main__":
     try: 
@@ -162,5 +165,7 @@ if __name__ == "__main__":
         print('Reading default parameters from rpp.input')
         ffile = 'rpp.input'
     params = parse_input(inputfile=ffile)
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'])
+    training, dic = parse_icsd(params['phase_fields'], params['anions_train'], \
+            params['nanions_train'], params['cations_train'], params['icsd_file'], True)
+    for k,v in dic.items():
+        print(k, v)
