@@ -36,14 +36,14 @@ def generate_study(phase_fields, lists, training):
         if len(set(f)) == len(lists) and sorted(f) not in training and sorted(f) not in study:
             study.append(sorted(f))
 
-    if os.path.isfile(f'{phase_fields}_testing.dat'):
-        print(f'Rewriting {len(study)} testing phase fields to {phase_fields}_testing.dat')
-        os.remove(f'{phase_fields}_testing.dat')
-    else:
-        print(f'Writing {len(study)} testing phase fields to {phase_fields}_testing.dat')
-
-    for i in study:
-        print (' '.join(map(str, i)), file=open(f'{phase_fields}_testing.dat','a'))
+ #   if os.path.isfile(f'{phase_fields}_testing.dat'):
+ #       print(f'Rewriting {len(study)} testing phase fields to {phase_fields}_testing.dat')
+ #       os.remove(f'{phase_fields}_testing.dat')
+ #   else:
+ #       print(f'Writing {len(study)} testing phase fields to {phase_fields}_testing.dat')
+ #
+ #   for i in study:
+ #       print (' '.join(map(str, i)), file=open(f'{phase_fields}_testing.dat','a'))
 
     print("==============================================")
     return study

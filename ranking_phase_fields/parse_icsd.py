@@ -16,7 +16,7 @@ def assign_params(params, input_params, name):
     # if in input file
     if name in params:
         parameters = str(params[name]).split(',')
-        if len(parameters) == 1 and (name == 'features' or parameters[0].strip() in symbols):
+        if len(parameters) == 1 and parameters[0].strip() in symbols:
             input_params[name] = [parameters[0].strip()]
         elif len(parameters) == 1:
             p = parameters[0].strip()
@@ -40,7 +40,7 @@ def assign_params(params, input_params, name):
         elif name == 'icsd_file':
             input_params[name] = 'icsd2017'
         elif name == 'features':
-            input_params[name] ='Pettifor'
+            input_params[name] ='magpie_37'
         elif name == 'average':
             input_params[name] = 1
         elif name == 'cross-validate':
@@ -146,13 +146,13 @@ def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd, r
         elif sorted(field) not in fields:
             fields.append(sorted(field))
     
-    if os.path.isfile(f"{phase_fields}_training_set.dat"):
-        print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
-        os.remove(f"{phase_fields}_training_set.dat")
-    else:
-        print(f"Writing {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
-    for f in fields:
-        print(' '.join(f), file=open(f"{phase_fields}_training_set.dat", 'a'))
+  # if os.path.isfile(f"{phase_fields}_training_set.dat"):
+  #     print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
+  #     os.remove(f"{phase_fields}_training_set.dat")
+  # else:
+  #     print(f"Writing {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
+  # for f in fields:
+  #     print(' '.join(f), file=open(f"{phase_fields}_training_set.dat", 'a'))
 
     print("==============================================")
     return fields

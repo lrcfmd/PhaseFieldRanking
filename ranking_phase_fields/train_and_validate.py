@@ -22,6 +22,7 @@ from pyod.models.cblof import CBLOF
 from pyod.models.sod import SOD
 from pyod.models.loci import LOCI
 from pyod.models.mcd import MCD
+from ranking_phase_fields.vae_encoder import VAE_
 
 def choose_model(model, nnet):
     """ among implemented in PyOD """
@@ -41,7 +42,8 @@ def choose_model(model, nnet):
     'CBLOF'          : CBLOF(),
     'SOD'            : SOD(),
     'LOCI'           : LOCI(),
-    'MCD'            : MCD()
+    'MCD'            : MCD(),
+    'VAE_encoder'    : VAE_(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], gamma=5, epochs=13, latent_dim=2)
     }
     return clfs[model]
 
@@ -63,14 +65,18 @@ def train_model(phase_fields, features, x_train, model, natom, average):
     threshold = 0.5 * (max(scores) + min(scores))
     
     if average == 1:
-        print(f"Writing training scores to {phase_fields}_{model}_training_scores.csv")
-        thr_ar = 0.5*np.ones(len(scores))
+        print(f"Writing training scores to {phase_fields}_{model}_{features}_training_scores.csv")
+        thr_ar = 0.5 * np.ones(len(scores))
         train_scaled  = scale(scores)
-        training_results = average_permutations(natom, x_, features[0], scores, train_scaled, net)
-        getout(training_results, f'{phase_fields}_{model}_training_scores.csv', 'Norm. scores')
+        training_results = average_permutations(natom, x_, features, scores, train_scaled)
+        getout(training_results, f'{phase_fields}_{model}_{features}_training_scores.csv', 'Norm. scores')
 
-    return x_, clf, threshold, nnet
+    return x_, clf, threshold, nnet, training_results
 
+def get_latent_vectors(x_train, features, clf):
+    """ works with VAE_encoder """
+    x_ = sym2num(x_train, features)
+    return (clf.encoder(x_)[-1]).numpy()
 
 def validate(phase_fields, features, x_train, model, natom, threshold, nnet):
     """ split training data, train and validate a model"""
@@ -78,7 +84,6 @@ def validate(phase_fields, features, x_train, model, natom, threshold, nnet):
     print('=============================================') 
     print(f"5 fold cross-validation of {model} model")
     l = int(len(x_train) / 5)
-    net = vec2name(len(features), natom)    
 
     for i in range(5):
         print(f"{model} cross_validation: validation subset #{i+1}")
@@ -101,7 +106,7 @@ def validate(phase_fields, features, x_train, model, natom, threshold, nnet):
  
         print(f"Validation error of validation set {i}: {round(val_error,2)}%", file=open(f'Validation_{phase_fields}_errors.dat','a'))
         thr_ar = threshold * np.ones(len(prediction))
-        results = average_permutations(natom, val_set, features[0], prediction, thr_ar, net)
+        results = average_permutations(natom, val_set, features, prediction, thr_ar)
         getout(results, f'Validation_{phase_fields}_{model}_subset{i+1}.csv', 'threshold')
 
     return 0
@@ -116,8 +121,7 @@ if __name__ == "__main__":
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
-    print(f"Representing each element with {len(params['features'])} features.")
-    print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
+    print(f"Representing each element with {params['features']} features.")
     print("==============================================")
     trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
     numatoms(params['phase_fields']), params['average_runs'])

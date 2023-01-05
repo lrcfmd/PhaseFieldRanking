@@ -6,3 +6,4 @@ from ranking_phase_fields.train_and_validate import *
 from ranking_phase_fields.models import * 
 from ranking_phase_fields.symbols import *
 from ranking_phase_fields.symbols_noradio import *
+from ranking_phase_fields.vae_encoder import *
