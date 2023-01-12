@@ -66,14 +66,39 @@ def sym2num(data, features):
             vectors.append(numbervector)
     return np.array(vectors)
 
+def num2sym_dic(features):
+    """create numbers to symbols dictionary a dictionary"""
+    elfeatures = pd.read_csv(f'elemental_features/{features}.csv')
+    dic = {}
+    nelements, nfeatures = elfeatures.shape
+    for i, element in zip(range(nelements), elfeatures['element']):
+        dic[tuple(elfeatures.loc[i][1:])] = element
+    return dic, nfeatures - 1 
+
 def num2sym(data, features):
+    """ transform numerical vectors for phases into alphabetic representation """
+    eldic, nfeatures = num2sym_dic(features)
+    nelements = int(len(data[0]) / nfeatures)
+
+    phases_alpha = []
+    for vector in data:
+        tupvector = [tuple(element) for element in np.array_split(vector, nelements)]
+        alpha = [eldic[tup] for tup in tupvector]
+        phases_alpha.append(sorted(alpha))
+
+    return phases_alpha 
+
+def num2sym_(data, features):
     df = pd.read_csv(f'elemental_features/{features}.csv')
     nfeatures = len(df.columns) - 1
+    # positions of the 0th feature
     positions = np.arange(0,len(data[0]), nfeatures)
-    feature = df.columns[1]
+    features = df.columns[1]
     phases = []
     for vector in data:
         numerical = [vector[int(position)] for position in positions]
+        # go through features and ensure the values are unique for 
+
         idx = df.index[df[feature].isin(numerical)].to_list()
         phases.append(sorted(df['element'][idx]))
     return phases
