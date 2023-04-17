@@ -11,9 +11,21 @@ def get_list(f='quaternary_VAE_random_200_test_scores.csv'):
     df = df.sort_values(by=['Phase fields'])
     return df['rank'].values
 
-base = get_list()
+
+def get_table(scores):
+    table = []
+    for f1 in scores:
+        table_i = []
+        for f2 in scores:
+#            if f1 == f2: continue
+            t, _ = tau(get_list(f1), get_list(f2))
+            table_i.append(round(t,2))
+        table.append(table_i)
+    return table
+
 
 scores = [
+        'quaternary_VAE_random_200_test_scores.csv',
         'quaternary_VAE_megnet16_test_scores.csv',
         'quaternary_VAE_magpie_test_scores.csv',
         'original_VAE_magpie37_test_scores.csv',
@@ -21,8 +33,16 @@ scores = [
         'quaternary_VAE_mat2vec_test_scores.csv',
         ]
 
-taus = []
 
+table = get_table(scores)
+for t in table:
+    print(t)
+
+sys.exit(0)
+
+# -- plot taus againts the base ranking ---
+base = get_list()
+taus = []
 for i in scores:
     r, _ = tau(base, get_list(i))
     taus.append(r)

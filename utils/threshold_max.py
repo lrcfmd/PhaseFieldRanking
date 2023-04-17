@@ -11,10 +11,9 @@ def threshold_fraction(train, test):
         ftrain.append(ftr)
         ftest.append(fte)
         if fte - ftr > 0:
-            fthresh.append(-(ftr - fte) / (ftr + fte))
+            fthresh.append((ftr - fte) / (ftr + fte))
         else:
             fthresh.append(0)
-        print(thr, ftr, fte, ftr - fte, ftr + fte)
     return ftrain, ftest, fthresh
 
 training, test = sys.argv[1:]
@@ -32,7 +31,8 @@ ftrain, ftest, fthresh = threshold_fraction(train, test)
 plt.plot(train,ftrain, label='Training set')
 plt.plot(train,ftest, label='Test set')
 plt.plot(train,fthresh,label='Threshold fractional score')
-plt.ylabel("Fraction of 'inliers' phase fields")
+plt.ylabel("Fraction of 'outliers' phase fields")
 plt.xlabel('Threshold RE')
+plt.xlim([0,30])
 plt.legend()
 plt.show()
