@@ -8,6 +8,7 @@
 
 import os
 import sys
+import pandas as pd
 from itertools import permutations as pt
 from ranking_phase_fields.symbols import *
 #from symbols import *
@@ -96,55 +97,81 @@ def parse_input(inputfile='rpp.input'):
     return input_params
 
 def numatoms(phase_fields):
-    nums = {'binary': 2, 'ternary': 3, 'quaternary': 4}
+    nums = {'binary': 2, 'ternary': 3, 'quaternary': 4, 'quinary': 5}
     return nums[phase_fields]
+
+def justify(field, maxatom):
+    """ the vectors will be justified by the largest phase field
+    in the training data by zero-padding
+    Here, a symbol 'X' is appended for missing elements
+    X is featurized in elemental features """
+    diff =  maxatom - len(field)
+    if diff:
+        field += ['X' for a in range(diff)]
+    return field
 
 def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd, return_dic=False):
     print("==============================================")
-    print(f'Reading ICSD list {icsd}')
-    print(f'for {phase_fields} phase fields with {nanions_train} anions...')
-    lines = open(icsd, 'r+').readlines()
-    nanions = int(nanions_train)
     if cations_train == 'all':
         cations_train = symbols
     if anions_train == 'all':
         anions_train = symbols
     anions = [a+'-' for a in anions_train]
-    fields = []
 
-    # Dictionary {phase field: number_of_compositions_within}
+    print(f'Reading training DATA: {icsd}')
+    if 'icsd' or 'ICSD' not in icsd:
+        print(f'Custom training data in {icsd} will be treated as a list of phase fields')
+        df = pd.read_csv(f'{icsd}')
+        df['fields'] = df.iloc[:,0].apply(lambda field: sorted(field.split()))
+        # prune the list of phase fields to only include cations_train
+        df['cations'] = df['fields'].apply(lambda field: len(set(field).difference(set(cations_train)))) 
+        print(f'original size:' ,len(df))
+        df = df[df['cations']==0]
+        print(f'with cations train size:' ,len(df))
 
-    for i in lines:
-        oxi,field = [],[]
+        # justify by the largest field
+        df['natoms'] = df['fields'].apply(lambda field: len(field))
+        maxatom = df['natoms'].max()
+        df['fields'] = df['fields'].apply(lambda field: justify(field, maxatom)) 
+        fields = df['fields'].to_list()
+#        fields = list(set(fields))
 
-#        # check the composition belongs to the chosen phase fields types:
-        if len(i.split()) != numatoms(phase_fields) + 1:
-            continue
-
-        # read elements of a composition
-        for n in range(1, len(i.split())):
-            el = list(i.split()[n])
-            sym = el[0]
-            if not el[1].isdigit(): 
-                sym += el[1]
-            ox = sym + el[-1]
-            if sym not in cations_train + anions_train:
-                break
-            field.append(sym)
-            oxi.append(ox)
-
-#       #check if the elements / cations are right:
-        if len(field) != numatoms(phase_fields):
-            continue
-
-        # check there is a right number of anions in a composition:
-        if nanions != 0:
-            field = sorted(field)
-            if len(set(oxi) & set(anions)) >= nanions and field not in fields:
-                fields.append(field)
-
-        elif sorted(field) not in fields:
-            fields.append(sorted(field))
+    else:
+        print(f'for {phase_fields} phase fields with {nanions_train} anions...')
+        lines = open(icsd, 'r+').readlines()
+        nanions = int(nanions_train)
+        fields = []
+        for i in lines:
+            oxi,field = [],[]
+     
+            # check the composition belongs to the chosen phase fields types:
+            if len(i.split()) != numatoms(phase_fields) + 1:
+                continue
+     
+            # read elements of a composition
+            for n in range(1, len(i.split())):
+                el = list(i.split()[n])
+                sym = el[0]
+                if not el[1].isdigit(): 
+                    sym += el[1]
+                ox = sym + el[-1]
+                if sym not in cations_train + anions_train:
+                    break
+                field.append(sym)
+                oxi.append(ox)
+     
+            #check if the elements / cations are right:
+            if len(field) != numatoms(phase_fields):
+                continue
+     
+            # check there is a right number of anions in a composition:
+            if nanions != 0:
+                field = sorted(field)
+                if len(set(oxi) & set(anions)) >= nanions and field not in fields:
+                    fields.append(field)
+     
+            elif sorted(field) not in fields:
+                fields.append(sorted(field))
     
   # if os.path.isfile(f"{phase_fields}_training_set.dat"):
   #     print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
@@ -165,7 +192,6 @@ if __name__ == "__main__":
         print('Reading default parameters from rpp.input')
         ffile = 'rpp.input'
     params = parse_input(inputfile=ffile)
-    training, dic = parse_icsd(params['phase_fields'], params['anions_train'], \
+    training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'], True)
-    for k,v in dic.items():
-        print(k, v)
+    print('Example phases:', training[:10])

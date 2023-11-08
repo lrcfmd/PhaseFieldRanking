@@ -1,0 +1,11 @@
+icsd_file      : intermetallics_ternaries.csv
+#icsd_file      : intermetallics_bin_ter_quater.csv
+phase_fields   : quaternary
+cations_train  : Li,Be,Na,Mg,Al,K,Ca,Sc,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Rb,Sr,Y,Zr,Nb,Mo,Ag,Cd,In,Sn,Cs,Ba,Hf,Ta,W,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi
+cation1_test   : Li,Be,Na,Mg,Al,K,Ca,Sc,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Rb,Sr,Y,Zr,Nb,Mo,Ag,Cd,In,Sn,Cs,Ba,Hf,Ta,W,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi
+cation2_test   : Li,Be,Na,Mg,Al,K,Ca,Sc,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Rb,Sr,Y,Zr,Nb,Mo,Ag,Cd,In,Sn,Cs,Ba,Hf,Ta,W,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi
+anion1_test    : Li,Be,Na,Mg,Al,K,Ca,Sc,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Rb,Sr,Y,Zr,Nb,Mo,Ag,Cd,In,Sn,Cs,Ba,Hf,Ta,W,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi
+method         : VAE
+cross-validate : False
+average_runs   : 1
+features       : LEAF59

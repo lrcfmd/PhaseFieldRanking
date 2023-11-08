@@ -43,7 +43,7 @@ def choose_model(model, nnet):
     'SOD'            : SOD(),
     'LOCI'           : LOCI(),
     'MCD'            : MCD(),
-    'VAE_encoder'    : VAE_(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], gamma=5, epochs=13, latent_dim=2)
+    'VAE_encoder'    : VAE_(encoder_neurons=nnet[:5], decoder_neurons=nnet[4:], gamma=5, epochs=23, latent_dim=2)
     }
     return clfs[model]
 
