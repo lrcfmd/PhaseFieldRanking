@@ -27,6 +27,7 @@ def calculate_pareto_fronts(x, y):
                 current_front.append(i)
 
         pareto_fronts.append(current_front)
+        print('Pareto front:' , len(pareto_fronts))
         remaining_points = [p for p in remaining_points if p not in current_front]
 
     return pareto_fronts

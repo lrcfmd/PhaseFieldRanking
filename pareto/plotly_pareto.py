@@ -1,8 +1,6 @@
 import pandas as pd
 import plotly.express as plt
 #import chart_studio.tools as tls
-from pareto import pareto_frontier_lists_x_y as pareto_frontier
-from pareto import pareto_fronts
 import sys
 
 dfile = sys.argv[1]

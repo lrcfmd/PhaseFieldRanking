@@ -1,7 +1,7 @@
-mport pandas as pd
+import pandas as pd
 import plotly.express as plt
 import sys
-from example import calculate_pareto_fronts 
+from calculator_pareto import calculate_pareto_fronts 
 
 dfile = sys.argv[1]
 
@@ -12,6 +12,7 @@ dic = {' '.join([str(l), str(m)]): phase for l, m, phase in zip(df.leaf, df.mat2
 print('Dictionary created')
 
 # get pareto fronts
+print('Calculating pareto fronts')
 pareto_fronts = calculate_pareto_fronts(df.leaf.values, df.mat2vec.values)
 print('Pareto calculated')
 

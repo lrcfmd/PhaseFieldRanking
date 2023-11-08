@@ -1,6 +1,7 @@
 # Ranking phase fields by likelihood with ICSD patterns
 
 13.08.2020 Andrij Vasylenko
+8.11.2023 Features Branch
 
 ![TOC](https://github.com/lrcfmd/PhaseFieldRanking/blob/master/TOC.png)
 
@@ -81,89 +82,10 @@ Read more about these methods https://www.pyod.readthedocs.io
 PyOD: A Python Toolbox for Scalable Outlier Detection. 
 Journal of machine learning research 20(96), pp.1-7 (2019).
 
-Supported elemental features:
+Supported elemental features.
+In 'features' branch of this repo, one can select precalculated features
+from elemental_features/ folder.
 
-TABLES/AtomicVolume.table
-
-TABLES/AtomicWeight.table
-
-TABLES/BCCbandgap.table
-
-TABLES/BCCefflatcnt.table
-
-TABLES/BCCenergy_pa.table
-
-TABLES/BCCenergydiff.table
-
-TABLES/BCCfermi.table
-
-TABLES/BCCmagmom.table
-
-TABLES/BCCvolume_pa.table
-
-TABLES/BCCvolume_padiff.table
-
-TABLES/BoilingT.table
-
-TABLES/Column.table
-
-TABLES/CovalentRadius.table
-
-TABLES/Density.table
-
-TABLES/Electronegativity.table
-
-TABLES/FirstIonizationEnergy.table
-
-TABLES/GSbandgap.table
-
-TABLES/GSefflatcnt.table
-
-TABLES/GSenergy_pa.table
-
-TABLES/GSestBCClatcnt.table
-
-TABLES/GSestFCClatcnt.table
-
-TABLES/GSmagmom.table
-
-TABLES/GSvolume_pa.table
-
-TABLES/ICSDVolume.table
-
-TABLES/MeltingT.table
-
-TABLES/MendeleevNumber.table
-
-TABLES/MiracleRadius.table
-
-TABLES/NUnfilled.table
-
-TABLES/NValance.table
-
-TABLES/NdUnfilled.table
-
-TABLES/NdValence.table
-
-TABLES/NfUnfilled.table
-
-TABLES/NfValence.table
-
-TABLES/NpUnfilled.table
-
-TABLES/NpValence.table
-
-TABLES/NsUnfilled.table
-
-TABLES/NsValence.table
-
-TABLES/Number.table
-
-TABLES/Pettifor.table
-
-TABLES/Polarizability.table
-
-TABLES/Row.table
 
 [2] Jha, D., Ward, L., Paul, A. et al. 
 ElemNet: Deep Learning the Chemistry of Materials From Only Elemental Composition.
@@ -190,4 +112,4 @@ N. J. Phys. 18, 093011 (2016). https://doi.org/10.1088/1367-2630/18/9/093011
 *method*        | (default: VAE) See all supported models above.
 *cross-validate*| (default: Fault) If True sets 5-fold cross-validation of the model.
 *average_runs*  | (default: 1) Number of runs to average the scores over. Makes sense for not neural network based (AE, VAE) methods.
-*features*      | (default: See rpp.input). See all supported features above.
+*features*      | (default: See rpp.input). See all supported features in elemental_features/ folder
