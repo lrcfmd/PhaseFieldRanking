@@ -24,26 +24,32 @@ def augment(chain, vec):
 def generate_study(phase_fields, lists, training):
     print (f'Creating testing data for unexplored {phase_fields} phase fields:')
 
-    field = lists[0]
+    # if elements for all positions in test phase fiels are the same:
+    if lists[0] == lists[1] == lists[2]:
+        print('Phase fields AAAA are built from the same elements A')
+        natoms = numatoms(phase_fields)
+        study = [list(field) for field in pmts(lists[0], natoms) if field not in training] 
 
-    # aument fields with elements from lists recursively
-    for i in range(1, len(lists)):
-        field = [ r for s in map(lambda el: augment(el, lists[i]), field) for r in s]
-
-    study = []
-    for f in field:
-        # check elements are unique
-        if len(set(f)) == len(lists) and sorted(f) not in training and sorted(f) not in study:
-            study.append(sorted(f))
-
-    if os.path.isfile(f'{phase_fields}_testing.dat'):
-        print(f'Rewriting {len(study)} testing phase fields to {phase_fields}_testing.dat')
-        os.remove(f'{phase_fields}_testing.dat')
     else:
-        print(f'Writing {len(study)} testing phase fields to {phase_fields}_testing.dat')
+        field = lists[0]
+        # aument fields with elements from lists recursively
+        for i in range(1, len(lists)):
+            field = [ r for s in map(lambda el: augment(el, lists[i]), field) for r in s]
 
-    for i in study:
-        print (' '.join(map(str, i)), file=open(f'{phase_fields}_testing.dat','a'))
+        study = []
+        for f in field:
+            # check elements are unique
+            if len(set(f)) == len(lists) and sorted(f) not in training and sorted(f) not in study:
+                study.append(sorted(f))
+
+ #   if os.path.isfile(f'{phase_fields}_testing.dat'):
+ #       print(f'Rewriting {len(study)} testing phase fields to {phase_fields}_testing.dat')
+ #       os.remove(f'{phase_fields}_testing.dat')
+ #   else:
+ #       print(f'Writing {len(study)} testing phase fields to {phase_fields}_testing.dat')
+ #
+ #   for i in study:
+ #       print (' '.join(map(str, i)), file=open(f'{phase_fields}_testing.dat','a'))
 
     print("==============================================")
     return study
@@ -64,5 +70,10 @@ if __name__ == "__main__":
     A1 = ['S','O','Cl','Br','I','N','F']
     A2 = ['S','O','Cl','Br','I','N','F']
     A3 = ['S','O','Cl','Br','I','N','F']
-    lists = [M1, M2, A1, A2, A3]
-    testing = generate_study('LiMMAA', lists, [])
+    A1 = 'Li,Be,Na,Mg,Al,K,Ca,Sc,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Rb,Sr,Y,Zr,Nb,Mo,Ag,Cd,In,Sn,Cs,Ba,Hf,Ta,W,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi'.split(',')
+    A2 = 'Li,Be,Na,Mg,Al,K,Ca,Sc,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Rb,Sr,Y,Zr,Nb,Mo,Ag,Cd,In,Sn,Cs,Ba,Hf,Ta,W,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi'.split(',')
+    A3 = 'Li,Be,Na,Mg,Al,K,Ca,Sc,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Rb,Sr,Y,Zr,Nb,Mo,Ag,Cd,In,Sn,Cs,Ba,Hf,Ta,W,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi'.split(',')
+    #lists = [M1, M2, A1, A2, A3]
+    lists = [A1, A2, A3]
+    testing = generate_study('ternary', lists, [])
+    print(len(testing), testing[:3])

@@ -10,6 +10,7 @@
 #    binaries
 #    ternaries
 #    quaternaries
+#    quinaries
 #    etc. with the specified ox. states
 # 3) AE, VAE and other models can be trained on the training set
 # for detection of the outliers in the training and testing sets
@@ -20,6 +21,7 @@
 
 import sys
 import numpy as np
+import pandas as pd
 import itertools as it
 from ranking_phase_fields.parse_icsd import *
 from ranking_phase_fields.generate_study  import *
@@ -44,15 +46,19 @@ def main(input_file):
     training = parse_icsd(params['phase_fields'], params['anions_train'], \
             params['nanions_train'], params['cations_train'], params['icsd_file'])
 
-    print( "Generating clear outliers - quaternaries of anions: ")
-    print(params['anions_train'])
-    training += [list(i) for i in it.combinations(params['anions_train'], 4)]
+   #print( "Generating clear outliers - quaternaries of anions: ")
+   #print(params['anions_train'])
+   #training += [list(i) for i in it.combinations(params['anions_train'], 4)]
 
     testing = generate_study(params['phase_fields'], params['elements_test'], training)
 
-    # model training: 
-    trained, clft, threshold, nnet = train_model(params['phase_fields'], params['features'], training, params['method'], \
+    trained, clft, threshold, nnet, trained_results = train_model(params['phase_fields'], params['features'], training, params['method'], \
         numatoms(params['phase_fields']), params['average_runs'])
+
+    # If latent vectors to be extracted (VAE_encoder model):
+    if params['method'] == 'VAE_encoder':
+        latent_training = get_latent_vectors(training, params['features'], clft)
+        latent_file(trained_results, latent_training, f"{params['phase_fields']}_{params['method']}_training_latent2.pkl")
 
     # 5-fold cross validation:
     if params['cross-validate'] == 'True':
@@ -60,20 +66,24 @@ def main(input_file):
         numatoms(params['phase_fields']), threshold, nnet)
 
     # data augmentation by permutation
-    testing = permute(testing)
+    testing_permuted = permute(testing)
     #print(f"Training set: {len(trained)} {params['phase_fields']} phase fields")
     #print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
     print("==============================================")
     
     # vectorise phase fields with features
-    print(f"Representing each element with {len(params['features'])} features.")
-    print(f"This represents each phase fields with {numatoms(params['phase_fields'])} x {len(params['features'])} - dimensional vector.")
+    print(f"Representing each element with {params['features']} features.")
     print("==============================================")
-    testing  = sym2num(testing, params['features'])
+    testing_permuted  = sym2num(testing_permuted, params['features'])
     
     # predict based on the trained model:
-    rank(clft, params['phase_fields'], params['features'], trained, testing, params['method'], \
+    testing_results = rank(clft, params['phase_fields'], params['features'], trained, testing_permuted, params['method'], \
             numatoms(params['phase_fields']), params['average_runs'])
+
+    # If latent vectors to be extracted (VAE_encoder model):
+    if params['method'] == 'VAE_encoder':
+        latent_testing = get_latent_vectors(testing, params['features'], clft)
+        latent_file(testing_results, latent_testing, f"{params['phase_fields']}_{params['method']}_testing_latent2.pkl")
     
     print("Finalising and exiting.")
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from ranking_phase_fields.__main__ import main
 import sys
+import ranking_phase_fields.__main__ as main
+
 if __name__=="__main__":
     try:
         input_file = sys.argv[1]
     except Exception:
         print("Usage: python ranking_phase_fields.py <input_file>")
         print("Reading default settings from rpp.input")
-        input_file = 'ranking_phase_fields/rpp.input'
-    main(input_file)
+        input_file = 'rpp.input'
+    main.main(input_file)

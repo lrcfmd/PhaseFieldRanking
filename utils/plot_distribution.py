@@ -68,22 +68,22 @@ def plot(data, label, nbins=10, score='raw', alpha=1, separation=None):
 
 if __name__=="__main__":
     ftr, fte  = sys.argv[1:3]
-    ftr = pd.read_csv(ftr).values[:,-3]
-    fte = pd.read_csv(fte).values[:,-3]
+    ftr = pd.read_csv(ftr).values[:,-1]
+    fte = pd.read_csv(fte).values[:,-1]
 
     # MMAA kernel
     plot_kernel(plt, ftr, "M-M'-M''-A training", 'tab:blue')
-    #plot_kernel(plt, fte, "unexplored M-M'-A-A' testing", 'tab:orange')
     plot_kernel(plt, fte, "unexplored Mg-M-M'-A testing", 'tab:orange')
 
     # MEAN diff
     D = np.mean(ftr) - np.mean(fte)
-    print(D)
+    print('Difference between mean RE for training, and mean for testing:', D)
     
     #plt.hist(ftr, 40) # label='original VAE')
-    plt.axvline(x=np.mean(fte), color='tab:orange', ls='--')
+    #plt.axvline(x=np.mean(fte), color='tab:orange', ls='--')
     #plt.hist(fte, 60, alpha=0.5) #, label='with anion-quaternaries in training')
-    plt.axvline(x=np.mean(ftr), color='tab:blue', ls='--')
- 
+    #plt.axvline(x=np.mean(ftr), color='tab:blue', ls='--')
+
+    #plt.xlim([0,30])
     plt.legend()
     plt.show()
