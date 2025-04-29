@@ -14,9 +14,7 @@ When using this code or any of the numerical results in this repository, please 
 
 ## Introduction
 
-In materials science, selection of 118 chemical elements to combine ultimately determines whether a elemental combination (called phase field) can form a stable compound. The combinatorial challenge is overwhelming, e.g., there are 118! / (3! * 115!) = 266916 possible ternary phase fields, with only a fraction of them explored synthetically. While scientists with accumulated knowledge of chemistry of materials can argue, that many combinations can afford stable compounds, depending on the particular stoichiometric ratios, it is still impossible to prioritise the likely attractive combinations.
-
-This model (PhaseRank) affords numerical assesment of the phase fields based on the knowledge exctracted with unsupervised learning of the Inorganic Crystal Structure Database (ICSD) of materials, and ranks the unexplored chemistry by similarity with the materials found in ICSD.
+The PhaseRank model provides a method to estimate the likelihood of a discovering new material given a combination of several elements (called a phase field). The combinatorial challenge is overwhelming, e.g., with 118 elements, there are 118! / (3! * 115!) = 266916 possible ternary phase fields, and only a fraction of them have been explored synthetically. Given it's impossible to explore all these combinations, PhaseRank provides a way to prioritize attractive phase fields likely to yield a new material. PhaseRank performs unsupervised learning on all reported materials in the Inorganic Crystal Structure Database (ICSD), and provides a numerical assessment of phase fields that can be easily used by experimental researchers to maximize the probability of discovering new materials.
 
 ## Requirements
 
