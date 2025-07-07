@@ -1,197 +1,168 @@
-# Ranking phase fields
-# Andrij Vasylenko
-# and.vasylenko@gmail.com
-# 13.08.2020
-# 
-# Parse input to read requirements for the training and testing sets,
-# to extract the training set from ICSD, and to form a testing set 
-
 import os
 import sys
 import pandas as pd
 from itertools import permutations as pt
-from ranking_phase_fields.symbols import *
-#from symbols import *
+from pathlib import Path
+import yaml
+from pydantic import BaseModel, Field
+from typing import List, Union, Literal
+from ranking_phase_fields.logger import get_logger
 
-def assign_params(params, input_params, name):
-    # if in input file
-    if name in params:
-        parameters = str(params[name]).split(',')
-        if len(parameters) == 1 and parameters[0].strip() in symbols:
-            input_params[name] = [parameters[0].strip()]
-        elif len(parameters) == 1:
-            p = parameters[0].strip()
-            if p.isdigit():
-                p = int(p)
-            input_params[name] = p
-        else:
-            input_params[name] = [i.strip() for i in parameters]
-    # default values
-    else: 
-        print (f'{name} is not specified in the input file. \
-                Will use a default value from rpp.input')
-        if 'cation' or 'anion' in name and 'nani' not in name:
-            input_params[name] = 'all'
-        elif 'nani' in name:
-            input_params[name] =  0
-        elif name == 'method':
-            input_params[name] ='VAE'
-        elif name == 'phase_fields':
-            input_params[name] = 'quaternary'
-        elif name == 'icsd_file':
-            input_params[name] = 'icsd2017'
-        elif name == 'features':
-            input_params[name] ='magpie_37'
-        elif name == 'average':
-            input_params[name] = 1
-        elif name == 'cross-validate':
-            input_params[name] = False
-    
-    # default for 'all' elements
-    if input_params[name] == 'all':
-        input_params[name] = symbols   
+logger = get_logger(__name__)
 
+ELEMENT_SYMBOLS = [
+    'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al',
+    'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe',
+    'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
+    'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn',
+    'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm',
+    'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W',
+    'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn',
+    'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
+    'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds',
+    'Rg', 'Cn', 'Fl', 'Lv'
+]
 
-def parse_input(inputfile='rpp.input'):
-    print(f'Reading input file {inputfile}')
-    print('Input parameters:')
-    print("==============================================")
-    lines = open(inputfile, 'r+').readlines()
-    params = {}
-    for l in lines:
-        l = l.strip().split(':')
-        params[str(l[0]).strip()] = l[-1]
+class Config(BaseModel):
+    icsd_file: str = "icsd2017"
+    phase_fields: Literal["ternary", "quaternary", "quinary"] = "quaternary"
+    cations_train: Union[str, List[str]] = "all"
+    anions_train: Union[str, List[str]] = Field(default_factory=list)
+    nanions_train: int = 0
+    cation1_test: Union[str, List[str]] = Field(default_factory=list)
+    cation2_test: Union[str, List[str]] = Field(default_factory=list)
+    anion1_test: Union[str, List[str]] = Field(default_factory=list)
+    anion2_test: Union[str, List[str]] = Field(default_factory=list)
+    method: Literal["VAE","AE", "VAE_encoder"] = "VAE"
+    cross_validate: bool = False
+    average_runs: int = 1
+    features: str = "magpie"
+    elements_test: List[str] = Field(default_factory=list)
 
-    input_params = {} 
-    assign_params(params, input_params, 'icsd_file')
-    assign_params(params, input_params, 'phase_fields')
-    assign_params(params, input_params, 'anions_train')
-    assign_params(params, input_params, 'nanions_train')
-    assign_params(params, input_params, 'cations_train')
-    assign_params(params, input_params, 'cation1_test')
-    assign_params(params, input_params, 'cation2_test')
-    assign_params(params, input_params, 'anion1_test')
-    assign_params(params, input_params, 'anion2_test')
-    assign_params(params, input_params, 'method')
-    assign_params(params, input_params, 'cross-validate')
-    assign_params(params, input_params, 'average_runs')
-    assign_params(params, input_params, 'features')
+def parse_input(inputfile: str = "config.yaml") -> Config:
+    logger.info(f"Reading input file {inputfile}")
+    with open(inputfile, "r") as f:
+        data = yaml.safe_load(f)
 
-    for k,v in input_params.items():
-        print(f'{k:15} : {v}')
+    # Convert possible comma-separated string to list
+    def to_list(value):
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",")]
+        return value
 
-#   castomise testing elements for phase fields cases:
-    if input_params['phase_fields'] == 'binary':
-        input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test']]
-    elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] in [0, 2]:
-        input_params['elements_test'] = [input_params['cation1_test'], input_params['anion1_test'], input_params['anion2_test']]
-    elif input_params['phase_fields'] == 'ternary' and input_params['nanions_train'] == 1:
-        input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test']]
+    data["anions_train"] = to_list(data.get("anions_train", []))
+    data["cation1_test"] = to_list(data.get("cation1_test", []))
+    data["cation2_test"] = to_list(data.get("cation2_test", []))
+    data["anion1_test"] = to_list(data.get("anion1_test", []))
+    data["anion2_test"] = to_list(data.get("anion2_test", []))
+
+    # Handle "all" logic for cations_train
+    if data.get("cations_train") == "all":
+        data["cations_train"] = ELEMENT_SYMBOLS
+
+    cfg = Config(**data)
+
+    # Compute elements_test
+    if cfg.phase_fields == "binary":
+        cfg.elements_test = cfg.cation1_test + cfg.anion1_test
+    elif cfg.phase_fields == "ternary" and cfg.nanions_train in [0, 2]:
+        cfg.elements_test = cfg.cation1_test + cfg.anion1_test + cfg.anion2_test
+    elif cfg.phase_fields == "ternary" and cfg.nanions_train == 1:
+        cfg.elements_test = cfg.cation1_test + cfg.cation2_test + cfg.anion1_test
     else:
-        input_params['elements_test'] = [input_params['cation1_test'], input_params['cation2_test'], input_params['anion1_test'], input_params['anion2_test']]
+        cfg.elements_test = cfg.cation1_test + cfg.cation2_test + cfg.anion1_test + cfg.anion2_test
 
-    input_params.pop('cation1_test') 
-    input_params.pop('cation2_test') 
-    input_params.pop('anion1_test') 
-    input_params.pop('anion2_test') 
-    return input_params
+    logger.info("Parsed configuration:")
+    for k, v in cfg.model_dump().items():
+        logger.info(f"{k:15}: {v}")
+
+    return cfg.model_dump()
+
 
 def numatoms(phase_fields):
     nums = {'binary': 2, 'ternary': 3, 'quaternary': 4, 'quinary': 5}
     return nums[phase_fields]
 
 def justify(field, maxatom):
-    """ the vectors will be justified by the largest phase field
-    in the training data by zero-padding
-    Here, a symbol 'X' is appended for missing elements
-    X is featurized in elemental features """
-    diff =  maxatom - len(field)
-    if diff:
-        field += ['X' for a in range(diff)]
-    return field
+    """Zero-pad field by appending X to match maxatom size."""
+    diff = maxatom - len(field)
+    return field + ['X'] * diff if diff else field
 
-def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd, return_dic=False):
-    print("==============================================")
+def parse_icsd(phase_fields, anions_train, nanions_train, cations_train, icsd_file='icsd2017'):
+    logger.info("="*55)
+
     if cations_train == 'all':
-        cations_train = symbols
+        cations_train = ELEMENT_SYMBOLS
     if anions_train == 'all':
-        anions_train = symbols
-    anions = [a+'-' for a in anions_train]
+        anions_train = ELEMENT_SYMBOLS
 
-    print(f'Reading training DATA: {icsd}')
-    if 'icsd' or 'ICSD' not in icsd:
-        print(f'Custom training data in {icsd} will be treated as a list of phase fields')
-        df = pd.read_csv(f'{icsd}')
-        df['fields'] = df.iloc[:,0].apply(lambda field: sorted(field.split()))
-        # prune the list of phase fields to only include cations_train
-        df['cations'] = df['fields'].apply(lambda field: len(set(field).difference(set(cations_train)))) 
-        print(f'original size:' ,len(df))
-        df = df[df['cations']==0]
-        print(f'with cations train size:' ,len(df))
+    anions_with_charge = [a + '-' for a in anions_train]
 
-        # justify by the largest field
-        df['natoms'] = df['fields'].apply(lambda field: len(field))
-        maxatom = df['natoms'].max()
-        df['fields'] = df['fields'].apply(lambda field: justify(field, maxatom)) 
-        fields = df['fields'].to_list()
-#        fields = list(set(fields))
+    icsd_path = Path("data") / icsd_file
+    logger.info(f"Reading training data: {icsd_path}")
+
+    # If custom CSV file
+    if not ("icsd" in icsd_file.lower()):
+        logger.info(f"Custom training data in {icsd_file} will be treated as list of phase fields")
+        df = pd.read_csv(icsd_path)
+
+        df['fields'] = df.iloc[:, 0].apply(lambda field: sorted(field.split()))
+        logger.info(f"Original size: {len(df)}")
+
+        # Only keep phase fields with all cations in training set
+        df['bad_cations'] = df['fields'].apply(lambda f: any(el not in cations_train for el in f))
+        df = df[~df['bad_cations']]
+        logger.info(f"Filtered size (valid cations): {len(df)}")
+
+        # Justify field lengths
+        maxatom = df['fields'].apply(len).max()
+        df['fields'] = df['fields'].apply(lambda f: justify(f, maxatom))
+
+        fields = df['fields'].tolist()
 
     else:
-        print(f'for {phase_fields} phase fields with {nanions_train} anions...')
-        lines = open(icsd, 'r+').readlines()
-        nanions = int(nanions_train)
+        logger.info(f"Parsing ICSD-type file for {phase_fields} phase fields with {nanions_train} anions...")
+        lines = icsd_path.read_text().splitlines()
+        logger.info(f'icsd lines: {len(lines)}, {lines[0]}')
         fields = []
-        for i in lines:
-            oxi,field = [],[]
-     
-            # check the composition belongs to the chosen phase fields types:
-            if len(i.split()) != numatoms(phase_fields) + 1:
-                continue
-     
-            # read elements of a composition
-            for n in range(1, len(i.split())):
-                el = list(i.split()[n])
-                sym = el[0]
-                if not el[1].isdigit(): 
-                    sym += el[1]
-                ox = sym + el[-1]
-                if sym not in cations_train + anions_train:
-                    break
-                field.append(sym)
-                oxi.append(ox)
-     
-            #check if the elements / cations are right:
-            if len(field) != numatoms(phase_fields):
-                continue
-     
-            # check there is a right number of anions in a composition:
-            if nanions != 0:
-                field = sorted(field)
-                if len(set(oxi) & set(anions)) >= nanions and field not in fields:
-                    fields.append(field)
-     
-            elif sorted(field) not in fields:
-                fields.append(sorted(field))
-    
-  # if os.path.isfile(f"{phase_fields}_training_set.dat"):
-  #     print(f"Rewriting {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
-  #     os.remove(f"{phase_fields}_training_set.dat")
-  # else:
-  #     print(f"Writing {len(fields)} {phase_fields} phase fields to {phase_fields}_training_set.dat")
-  # for f in fields:
-  #     print(' '.join(f), file=open(f"{phase_fields}_training_set.dat", 'a'))
+        n_atoms = numatoms(phase_fields)
+        nanions = int(nanions_train)
+        logger.info(f'nanions, {nanions}')
 
-    print("==============================================")
+    for line in lines:
+        tokens = line.split()
+        if len(tokens) != n_atoms + 1:
+            continue
+     
+        field, oxi = [], []
+     
+        for el in tokens[1:]:
+            # Parse symbol
+            if el[-1] in ('+', '-') and el[-2].isdigit():
+                sym = el[:-2]
+            elif el[-1] in ('+', '-'):
+                sym = el[:-1]
+            else:
+                # Unexpected format
+                continue
+     
+            ox = el
+     
+            if sym not in cations_train + anions_train:
+                break
+     
+            field.append(sym)
+            oxi.append(ox)
+     
+        else:
+            if nanions > 0:
+                # Count how many oxi entries are for anions
+                n_anions_found = sum(1 for o in oxi if any(o.startswith(a) and o[-1] == '-' for a in anions_train))
+                if n_anions_found >= nanions and sorted(field) not in fields:
+                    fields.append(sorted(field))
+            else:
+                if sorted(field) not in fields:
+                    fields.append(sorted(field))
+
+    logger.info(f'Collected fields: {len(fields)}')
     return fields
-
-if __name__ == "__main__":
-    try: 
-        ffile = sys.argv[1]
-    except:
-        print('Provide list of elements of interest in the input file. Usage: python parse_icsd.py <input_file>')
-        print('Reading default parameters from rpp.input')
-        ffile = 'rpp.input'
-    params = parse_input(inputfile=ffile)
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'], True)
-    print('Example phases:', training[:10])

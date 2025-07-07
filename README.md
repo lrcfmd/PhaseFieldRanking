@@ -2,6 +2,7 @@
 
 13.08.2020 Andrij Vasylenko
 8.11.2023 Features Branch
+8.06.2025 Refactor
 
 ![TOC](https://github.com/lrcfmd/PhaseFieldRanking/blob/master/TOC.png)
 
@@ -42,17 +43,12 @@ scikit-learn-0.20.0
 Dependencies can be installed automatically during installation.
 
 ## Installation
-`pip install rankfields`
+`pip install .`
 
 ## Usage
-`rankfields` <input_file>
+`python -m ranking_phase_fields` <input_file>
 
-E.g., `rankfields rpp.input`
-
-should reproduce results for Supplementary Table S3.
-
-The results for this and other example runs with inputs from `ranking_phase_fields/test_input/`
-are copied in `ranking_phase_fields/test_results/`
+E.g., `python -m ranking_phase_fields config.yaml`
 
 ## Functionality
 Unsupervised pattern recognition methods utilise PyOD library.
@@ -61,20 +57,7 @@ Models:
 
     'AE'             : AutoEncoder
     'VAE'            : Variational AE
-    'ABOD'           : Angle-based outlier detection
-    'FeatureBagging' : FeatureBagging
-    'HBOS'           : Histogram-Based Outlier Score
-    'IForest'        : Isolation Forest
-    'KNN'            : K-Nearest Neighbours
-    'LOF'            : Local Outlier Factor
-    'OCSVM'          : OCSupport Vector Machine
-    'PCA'            : Principle Component Analysis
-    'SOS'            : SOS(),
-    'COF'            : Connectivity-based OF(),
-    'CBLOF'          : Clustering-Based LOF
-    'SOD'            : SOD(),
-    'LOCI'           : LOCI(),
-    'MCD'            : MCD()
+    'VAE_encoder'    : Variational AE with extracting latent features
 
 Read more about these methods https://www.pyod.readthedocs.io
 
@@ -83,20 +66,18 @@ PyOD: A Python Toolbox for Scalable Outlier Detection.
 Journal of machine learning research 20(96), pp.1-7 (2019).
 
 Supported elemental features.
-In 'features' branch of this repo, one can select precalculated features
-from elemental_features/ folder.
+When describing element one can select precalculated features
+from data/elemental_features/ folder,
+including LEAFs - locan environment atomic features
+[2] A. Vasylenko et. al. Digital atomic features Digital Discovery 2025
 
+## Development & Tests
 
-[2] Jha, D., Ward, L., Paul, A. et al. 
-ElemNet: Deep Learning the Chemistry of Materials From Only Elemental Composition.
-Sci Rep 8, 17593 (2018). https://doi.org/10.1038/s41598-018-35934-y
-
-[3] Glawe, H., Sanna, A., Gross, E. K. U., Marques, M. A. L.,
-The optimal one dimensional periodic table: a modified Pettifor chemical scale from data mining.
-N. J. Phys. 18, 093011 (2016). https://doi.org/10.1088/1367-2630/18/9/093011
+- Example test inputs and example outputs are included in the repository for reference.
+- You can run unit tests using `pytest tests/`.
 
 ## Parameters of the input file 
-(default values are in the rpp.input file)
+(default values are in the config.yaml file)
 
  parameter | value 
 ---|--- 
@@ -112,4 +93,17 @@ N. J. Phys. 18, 093011 (2016). https://doi.org/10.1088/1367-2630/18/9/093011
 *method*        | (default: VAE) See all supported models above.
 *cross-validate*| (default: Fault) If True sets 5-fold cross-validation of the model.
 *average_runs*  | (default: 1) Number of runs to average the scores over. Makes sense for not neural network based (AE, VAE) methods.
-*features*      | (default: See rpp.input). See all supported features in elemental_features/ folder
+*features*      | (default: See config.yaml). See all supported features in data/elemental_features/ folder
+
+
+## Project structure
+
+- ranking_phase_fields/     ← Main package
+- data/                     ← Input data and features (e.g., elemental features, ICSD files)
+- tests/                    ← Unit tests
+- examples/                 ← Jupyter notebooks and example CSVs
+
+Other files:
+- config.yaml               ← Default configuration file with input parameters
+- pyproject.toml            ← Build system & dependencies
+- README.md                 ← This file

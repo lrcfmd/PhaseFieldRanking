@@ -20,76 +20,144 @@
 # with the likelihood of forming a stable composition within a phase field.
 
 import sys
-import numpy as np
-import pandas as pd
+from pathlib import Path
+from typing import Optional
 import itertools as it
-from ranking_phase_fields.parse_icsd import *
-from ranking_phase_fields.generate_study  import *
-from ranking_phase_fields.features import *
-from ranking_phase_fields.models import *
-#from ranking_phase_fields.validation import *
-from ranking_phase_fields.train_and_validate import *
+from ranking_phase_fields.parse_icsd import parse_input, parse_icsd
+from ranking_phase_fields.generate_study import generate_study, permute
+from ranking_phase_fields.features import sym2num, numatoms
+from ranking_phase_fields.models import rank, get_latent_vectors, latent_file
+from ranking_phase_fields.train_and_validate import train_model, validate
+from ranking_phase_fields.logger import get_logger
 
+logger = get_logger(__name__)
 
-def main(input_file):
-    ''' Main routine '''
-    print("========================================================")
-    print("RANKING OF THE PHASE FIELDS BY LIKELIHOOD WITH ICSD DATA \n")
-    print("Similar phase fields to those found in ICSD are believed to yield stable compostions.")
-    print("The similarity is measured via encoding and decoding vectorized phase fields with VAE")
-    print("\n Andrij Vasylenko 13.08.2020")
-    print("=========================================================")
-    
-    # parce input file
-    params = parse_input(input_file)    
-    # exctract training and generate testing set
-    training = parse_icsd(params['phase_fields'], params['anions_train'], \
-            params['nanions_train'], params['cations_train'], params['icsd_file'])
+class PhaseFieldRanker:
+    def __init__(self, input_file: str = "config.yaml") -> None:
+        self.input_file = input_file
+        self.params = None
+        self.training = []
+        self.testing = []
 
-   #print( "Generating clear outliers - quaternaries of anions: ")
-   #print(params['anions_train'])
-   #training += [list(i) for i in it.combinations(params['anions_train'], 4)]
+    def load_params(self) -> None:
+        logger.info(f"Loading input parameters from '{self.input_file}'")
+        self.params = parse_input(self.input_file)
 
-    testing = generate_study(params['phase_fields'], params['elements_test'], training)
+    def prepare_training_data(self) -> None:
+        if self.params is None:
+            raise RuntimeError("Input parameters not loaded")
+        logger.info("Parsing ICSD training data")
+        self.training = parse_icsd(
+            self.params.phase_fields,
+            self.params.anions_train,
+            self.params.nanions_train,
+            self.params.cations_train,
+            self.params.icsd_file
+        )
 
-    trained, clft, threshold, nnet, trained_results = train_model(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), params['average_runs'])
+    def generate_testing_data(self) -> None:
+        if self.params is None:
+            raise RuntimeError("Input parameters not loaded")
+        logger.info(f"Generating testing data for unexplored {self.params['phase_fields']} phase fields")
+        self.testing = generate_study(
+            self.params.phase_fields,
+            self.params.elements_test,
+            self.training
+        )
 
-    # If latent vectors to be extracted (VAE_encoder model):
-    if params['method'] == 'VAE_encoder':
-        latent_training = get_latent_vectors(training, params['features'], clft)
-        latent_file(trained_results, latent_training, f"{params['phase_fields']}_{params['method']}_training_latent2.pkl")
+    def train(self):
+        if self.params is None:
+            raise RuntimeError("Input parameters not loaded")
+        logger.info("Starting model training")
+        return train_model(
+            self.params.phase_fields,
+            self.params.features,
+            self.training,
+            self.params.method,
+            numatoms(self.params.phase_fields),
+            self.params.average_runs
+        )
 
-    # 5-fold cross validation:
-    if params['cross-validate'] == 'True':
-        validate(params['phase_fields'], params['features'], training, params['method'], \
-        numatoms(params['phase_fields']), threshold, nnet)
+    def cross_validate(self, threshold, nnet):
+        if self.params is None:
+            raise RuntimeError("Input parameters not loaded")
+        if self.params.get('cross-validate', False) == 'True':
+            logger.info("Performing cross-validation")
+            validate(
+                self.params.phase_fields,
+                self.params.features,
+                self.training,
+                self.params.method,
+                numatoms(self.params.phase_fields),
+                threshold,
+                nnet
+            )
 
-    # data augmentation by permutation
-    testing_permuted = permute(testing)
-    #print(f"Training set: {len(trained)} {params['phase_fields']} phase fields")
-    #print(f"Testing set: {len(testing)} unexplored {params['phase_fields']} phase fields")
-    print("==============================================")
-    
-    # vectorise phase fields with features
-    print(f"Representing each element with {params['features']} features.")
-    print("==============================================")
-    testing_permuted  = sym2num(testing_permuted, params['features'])
-    
-    # predict based on the trained model:
-    testing_results = rank(clft, params['phase_fields'], params['features'], trained, testing_permuted, params['method'], \
-            numatoms(params['phase_fields']), params['average_runs'])
+    def encode_latent_space(self, clft, trained_results, dataset, suffix: str):
+        latent_vectors = get_latent_vectors(dataset, self.params.features, clft)
+        latent_file(trained_results, latent_vectors, f"{self.params.phase_fields}_{self.params.method}_{suffix}.pkl")
 
-    # If latent vectors to be extracted (VAE_encoder model):
-    if params['method'] == 'VAE_encoder':
-        latent_testing = get_latent_vectors(testing, params['features'], clft)
-        latent_file(testing_results, latent_testing, f"{params['phase_fields']}_{params['method']}_testing_latent2.pkl")
-    
-    print("Finalising and exiting.")
+    def rank_testing_data(self, clft, trained):
+        if self.params is None:
+            raise RuntimeError("Input parameters not loaded")
+
+        logger.info("=" * 45)
+        logger.info(f"Representing each element with {self.params.features} features.")
+        logger.info("=" * 45)
+
+        testing_permuted = permute(self.testing)
+        testing_numeric = sym2num(testing_permuted, self.params.features)
+
+        testing_results = rank(
+            clft,
+            self.params.phase_fields,
+            self.params.features,
+            trained,
+            testing_numeric,
+            self.params.method,
+            numatoms(self.params.phase_fields),
+            self.params.average_runs]
+        )
+        return testing_results
+
+    def run_study(self) -> None:
+        logger.info("=" * 55)
+        logger.info("RANKING OF THE PHASE FIELDS BY LIKELIHOOD WITH ICSD DATA")
+        logger.info("Similar phase fields to those found in ICSD are hypothesized to yield stable compositions.")
+        logger.info("The similarity is measured via encoding and decoding vectorized phase fields with VAE.")
+        logger.info("Author: Andrij Vasylenko | Date: 2020-08-13")
+        logger.info("=" * 55)
+
+        self.load_params()
+        self.prepare_training_data()
+        self.generate_testing_data()
+        self.trainer = Trainer(
+            model_name=self.params.method,
+            phase_fields=self.params.phase_fields,
+            features=self.params.features,
+            natom=numatoms(self.params.phase_fields),
+            average_runs=self.params.average_runs
+        )
+
+        x_, threshold, nnet, training_results = self.trainer.train(self.training)
+
+        if self.params.method == 'VAE_encoder':
+            latent_vecs = self.trainer.get_latent_vectors(self.training)
+
+        if self.params.cross_validate:
+            self.trainer.validate(self.training, threshold)
+
+        testing_results = self.rank_testing_data(clft, trained)
+
+        logger.info("Finished successfully. Exiting.")
+
+def main(input_file: Optional[str] = None):
+    if input_file is None:
+        input_file = "config.yaml"
+    root_dir = Path(__file__).resolve().parent.parent
+    ranker = PhaseFieldRanker(root_dir / input_file)
+    ranker.run_study()
 
 if __name__ == "__main__":
-    try:
-        ff = sys.argv[1]
-    except:
-        ff = 'rpp.input'
-    main(ff)
+    input_file_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    main(input_file_arg)

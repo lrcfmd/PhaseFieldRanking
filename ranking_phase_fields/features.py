@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
-from ranking_phase_fields.symbols import *
-
-# In the features branch to study effects on train - test distributions, 
-# different sets of features are read from the .csv files in ranking_phase_fields/elemental_features 
-# --------------------------------------------------------------------------------------------------
+from pathlib import Path
 
 def sym2num(data, features):
-    """ getting features from .csv dataframe """
-    df = pd.read_csv(f'elemental_features/{features}.csv')
+    """Convert symbolic elements to numeric vectors based on feature CSV."""
+    features_dir = Path(__file__).parent.parent / "data" / "elemental_features"
+    features_csv = features_dir / f"{features}.csv"
+    df = pd.read_csv(features_csv)
     vectors = []
     for vector in data:
         numbervector = []
@@ -24,16 +22,17 @@ def sym2num(data, features):
     return np.array(vectors)
 
 def num2sym_dic(features):
-    """create numbers to symbols dictionary a dictionary"""
-    elfeatures = pd.read_csv(f'elemental_features/{features}.csv')
+    """Create a dictionary mapping feature tuples to element symbols."""
+    features_dir = Path(__file__).parent.parent / "data" / "elemental_features"
+    features_csv = features_dir / f"{features}.csv"
+    elfeatures = pd.read_csv(features_csv)
     dic = {}
-    nelements, nfeatures = elfeatures.shape
-    for i, element in zip(range(nelements), elfeatures['element']):
+    for i, element in zip(range(len(elfeatures)), elfeatures['element']):
         dic[tuple(elfeatures.loc[i][1:])] = element
-    return dic, nfeatures - 1 
+    return dic, elfeatures.shape[1] - 1
 
 def num2sym(data, features):
-    """ transform numerical vectors for phases into alphabetic representation """
+    """Convert numerical vectors back to symbolic element lists."""
     eldic, nfeatures = num2sym_dic(features)
     nelements = int(len(data[0]) / nfeatures)
 
@@ -42,17 +41,9 @@ def num2sym(data, features):
         tupvector = [tuple(element) for element in np.array_split(vector, nelements)]
         alpha = [eldic[tup] for tup in tupvector]
         phases_alpha.append(sorted(alpha))
+    return phases_alpha
 
-    return phases_alpha 
+def vec2name(ndes, natom):
+    """Get feature index for each atom."""
+    return [ndes * i for i in range(natom)]
 
-
-if __name__ == "__main__":
-#------------------------------------------ 
-# check new sym2num and num2sym
-
-    data = [['O', 'Cm', 'Cl', 'B'],['Te', 'S', 'Ga', 'Bi']]
-    vectors = sym2num(data, 'megnet16')
-    phases = num2sym(vectors, 'megnet16')
-    print(data)
-    print(len(vectors))
-    print(phases)

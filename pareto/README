@@ -1,4 +1,0 @@
-robust:
-1. create test.csv with columns for scores: e.g., 'leaf', 'mat2vec'
-2. run 'python calculate_pareto_simple test.csv'
-3. this will create .html *plotlychart.csv and show results on display

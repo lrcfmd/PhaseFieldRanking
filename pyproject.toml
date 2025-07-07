@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rankfields"
+version = "0.1.2.4"
+description = "Ranking phase fields with likelihood of finding a stable composition"
+readme = "README.md"
+requires-python = ">=3.7, <3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Andrij Vasylenko", email = "and.vasylenko@gmail.com" }
+]
+dependencies = [
+    "pyod",
+    "numpy",
+    "tensorflow"
+]
+keywords = ["materials", "phase fields", "ranking", "stability", "machine learning"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/lrcfmd/RankingPhaseFields"
+Issues = "https://github.com/lrcfmd/RankingPhaseFields/issues"
+
+[project.scripts]
+ranking_phase_fields = "ranking_phase_fields.__main__:main"
+
+[tool.setuptools]
+packages = ["ranking_phase_fields"]
+
+[tool.setuptools.package-data]
+"ranking_phase_fields" = ["rpp.input"]

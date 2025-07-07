@@ -23,13 +23,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from ranking_phase_fields.pairwise_distances_no_broadcast import *
-
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Lambda, Input, Dense, Dropout
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.losses import mse
 from tensorflow.keras import backend as K
+
+from ranking_phase_fields.score_utils import pairwise_distances_no_broadcast
 
 
 class VAE_:

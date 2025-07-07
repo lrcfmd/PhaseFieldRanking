@@ -1,0 +1,2 @@
+[2025-07-05 13:32:59] [INFO] [ranking_phase_fields.train_and_validate] Training VAE model on 100 samples.
+[2025-07-05 13:33:01] [INFO] [ranking_phase_fields.train_and_validate] Averaging training scores and writing results.
