@@ -69,7 +69,7 @@ Supported elemental features.
 When describing element one can select precalculated features
 from data/elemental_features/ folder,
 including LEAFs - locan environment atomic features
-[2] A. Vasylenko et. al. Digital atomic features Digital Discovery 2025
+[2] A. Vasylenko et. al. Digital features of chemical elements extracted from local geometries in crystal structures, Digital Discovery 4, 477 (2025)
 
 ## Development & Tests
 
