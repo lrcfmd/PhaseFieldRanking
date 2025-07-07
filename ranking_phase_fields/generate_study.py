@@ -24,6 +24,7 @@ def augment(chain, vec):
 
 def generate_study(phase_fields, lists, training):
     logger.info(f'Creating testing data for unexplored {phase_fields} phase fields:')
+    logger.info(f'Creating testing data for elements {lists}')
 
     # If all positions have the same elements (e.g., ['A'], ['A'], ['A'])
     if all(lst == lists[0] for lst in lists):

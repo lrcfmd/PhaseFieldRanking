@@ -23,11 +23,9 @@ import sys
 from pathlib import Path
 from typing import Optional
 import itertools as it
-from ranking_phase_fields.parse_icsd import parse_input, parse_icsd
-from ranking_phase_fields.generate_study import generate_study, permute
-from ranking_phase_fields.features import sym2num, numatoms
-from ranking_phase_fields.models import rank, get_latent_vectors, latent_file
-from ranking_phase_fields.train_and_validate import train_model, validate
+from ranking_phase_fields.parse_icsd import parse_input, parse_icsd, numatoms
+from ranking_phase_fields.generate_study import generate_study
+from ranking_phase_fields.train_and_validate import Trainer
 from ranking_phase_fields.logger import get_logger
 
 logger = get_logger(__name__)
@@ -58,67 +56,12 @@ class PhaseFieldRanker:
     def generate_testing_data(self) -> None:
         if self.params is None:
             raise RuntimeError("Input parameters not loaded")
-        logger.info(f"Generating testing data for unexplored {self.params['phase_fields']} phase fields")
+        logger.info(f"Generating testing data for unexplored {self.params.phase_fields} phase fields")
         self.testing = generate_study(
             self.params.phase_fields,
             self.params.elements_test,
             self.training
         )
-
-    def train(self):
-        if self.params is None:
-            raise RuntimeError("Input parameters not loaded")
-        logger.info("Starting model training")
-        return train_model(
-            self.params.phase_fields,
-            self.params.features,
-            self.training,
-            self.params.method,
-            numatoms(self.params.phase_fields),
-            self.params.average_runs
-        )
-
-    def cross_validate(self, threshold, nnet):
-        if self.params is None:
-            raise RuntimeError("Input parameters not loaded")
-        if self.params.get('cross-validate', False) == 'True':
-            logger.info("Performing cross-validation")
-            validate(
-                self.params.phase_fields,
-                self.params.features,
-                self.training,
-                self.params.method,
-                numatoms(self.params.phase_fields),
-                threshold,
-                nnet
-            )
-
-    def encode_latent_space(self, clft, trained_results, dataset, suffix: str):
-        latent_vectors = get_latent_vectors(dataset, self.params.features, clft)
-        latent_file(trained_results, latent_vectors, f"{self.params.phase_fields}_{self.params.method}_{suffix}.pkl")
-
-    def rank_testing_data(self, clft, trained):
-        if self.params is None:
-            raise RuntimeError("Input parameters not loaded")
-
-        logger.info("=" * 45)
-        logger.info(f"Representing each element with {self.params.features} features.")
-        logger.info("=" * 45)
-
-        testing_permuted = permute(self.testing)
-        testing_numeric = sym2num(testing_permuted, self.params.features)
-
-        testing_results = rank(
-            clft,
-            self.params.phase_fields,
-            self.params.features,
-            trained,
-            testing_numeric,
-            self.params.method,
-            numatoms(self.params.phase_fields),
-            self.params.average_runs]
-        )
-        return testing_results
 
     def run_study(self) -> None:
         logger.info("=" * 55)
@@ -139,7 +82,7 @@ class PhaseFieldRanker:
             average_runs=self.params.average_runs
         )
 
-        x_, threshold, nnet, training_results = self.trainer.train(self.training)
+        x_, threshold, nnet, training_results = self.trainer.run_training(self.training)
 
         if self.params.method == 'VAE_encoder':
             latent_vecs = self.trainer.get_latent_vectors(self.training)
@@ -147,7 +90,7 @@ class PhaseFieldRanker:
         if self.params.cross_validate:
             self.trainer.validate(self.training, threshold)
 
-        testing_results = self.rank_testing_data(clft, trained)
+        testing_results = self.trainer.rank(self.training, self.testing)
 
         logger.info("Finished successfully. Exiting.")
 

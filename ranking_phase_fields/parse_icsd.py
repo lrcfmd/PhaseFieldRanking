@@ -64,20 +64,21 @@ def parse_input(inputfile: str = "config.yaml") -> Config:
 
     # Compute elements_test
     if cfg.phase_fields == "binary":
-        cfg.elements_test = cfg.cation1_test + cfg.anion1_test
+        cfg.elements_test = [cfg.cation1_test,cfg.anion1_test]
     elif cfg.phase_fields == "ternary" and cfg.nanions_train in [0, 2]:
-        cfg.elements_test = cfg.cation1_test + cfg.anion1_test + cfg.anion2_test
+        cfg.elements_test = [cfg.cation1_test, cfg.anion1_test, cfg.anion2_test]
     elif cfg.phase_fields == "ternary" and cfg.nanions_train == 1:
-        cfg.elements_test = cfg.cation1_test + cfg.cation2_test + cfg.anion1_test
+        cfg.elements_test = [cfg.cation1_test, cfg.cation2_test, cfg.anion1_test]
+    elif cfg.phase_fields =='quaternary':
+        cfg.elements_test = [cfg.cation1_test, cfg.cation2_test, cfg.anion1_test, cfg.anion2_test]
     else:
-        cfg.elements_test = cfg.cation1_test + cfg.cation2_test + cfg.anion1_test + cfg.anion2_test
+        logger.warning(f"{cfg.phase_fields} unsuported phase fields")
 
     logger.info("Parsed configuration:")
     for k, v in cfg.model_dump().items():
         logger.info(f"{k:15}: {v}")
 
-    return cfg.model_dump()
-
+    return cfg 
 
 def numatoms(phase_fields):
     nums = {'binary': 2, 'ternary': 3, 'quaternary': 4, 'quinary': 5}

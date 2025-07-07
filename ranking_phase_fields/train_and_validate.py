@@ -41,12 +41,14 @@ class Trainer:
     def run_training(self, x_train: List) -> Tuple[np.ndarray, float, List[int], List]:
         """Train model, compute scores, and save results"""
         x_ = permute(x_train)
+        logger.info(f"Featurising with {self.features}")
         x_ = sym2num(x_, self.features)
+        logger.info(f"{x_[0]}")
 
         logger.info(f"Training {self.model_name} model on {len(x_train)} samples.")
-        model = self._choose_model()
-        model.fit(x_)
-        scores = np.array(model.decision_scores_)
+        self.clf = self._choose_model()
+        self.clf.fit(x_)
+        scores = np.array(self.clf.decision_scores_)
         threshold = 0.5 * (max(scores) + min(scores))
 
         if self.average_runs == 1:
@@ -63,6 +65,9 @@ class Trainer:
         """
         Train and rank test samples against trained ICSD data, with optional averaging over multiple runs.
         """
+
+        x_test = sym2num(x_test, self.features)
+
         if self.clf is None:
             self.clf = self._choose_model()
 
@@ -86,7 +91,7 @@ class Trainer:
                 self.clf.fit(x_train)
 
                 train_scores_run = np.asarray(self.clf.decision_scores_)
-                test_scores_run = np.asarray(self.clf.decision_function(x_test))
+                test_scores_run = np.asarray(self.clf.decision_function(np.array(x_test)))
 
                 y_train_scores += train_scores_run
                 y_test_scores += test_scores_run

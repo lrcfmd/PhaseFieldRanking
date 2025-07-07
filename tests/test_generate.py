@@ -10,7 +10,6 @@ def test_generate_study_ternary_nonhomogenous_lists():
     lists = [A1, A2, A3]
     training = []
 
-    # Set logging level to INFO to see logs if needed
     logging.getLogger('ranking_phase_fields.generate_study').setLevel(logging.INFO)
 
     result = generate_study('ternary', lists, training)
@@ -18,10 +17,10 @@ def test_generate_study_ternary_nonhomogenous_lists():
     # Each output item should be length 3 (one element from each list)
     assert all(len(item) == 3 for item in result)
 
-    # The elements should be unique inside each item (since you filter that)
+    # The elements should be unique inside each item
     assert all(len(set(item)) == 3 for item in result)
 
-    # The items should be sorted unique lists (per your code)
+    # The items should be sorted unique lists 
     for item in result:
         assert item == sorted(item)
 
