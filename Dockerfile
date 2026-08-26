@@ -16,9 +16,12 @@ RUN groupadd -r lmds && useradd -r -g lmds -u 1000 -m -d /home/lmds lmds
 WORKDIR /app
 COPY --from=builder /app/dist/*.whl /app/
 # Install the CPU-only torch first so the wheel's torch requirement resolves to
-# the CPU build rather than the default multi-GB CUDA wheel. tensorflow-cpu is
-# already CPU-only from PyPI.
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+# the CPU build rather than the default multi-GB CUDA wheel. Use the torch CPU
+# index as an EXTRA index (not the sole one) so torch's own build/deps still
+# resolve from PyPI; pin the +cpu local build so it comes from the torch index.
+# tensorflow-cpu is already CPU-only from PyPI.
+RUN pip install --no-cache-dir torch==2.13.0+cpu \
+      --extra-index-url https://download.pytorch.org/whl/cpu \
  && pip install --no-cache-dir /app/*.whl && rm -f /app/*.whl
 
 # The platform runs the container as uid 1000. The runner creates /data/input
