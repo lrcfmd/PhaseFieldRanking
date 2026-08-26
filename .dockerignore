@@ -1,0 +1,8 @@
+**/__pycache__/
+.venv/
+.git/
+.gitignore
+.DS_Store
+# Model artifacts are provided at runtime, never baked into the image.
+src/model/artifacts/*.joblib
+src/model/artifacts/*.csv

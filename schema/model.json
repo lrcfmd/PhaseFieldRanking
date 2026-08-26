@@ -1,0 +1,113 @@
+{
+  "$schema": "./model.schema.json",
+  "name": "phase-field-ranking",
+  "version": "1.0.0",
+
+  "parameters": {
+    "phase_fields": {
+      "type": "string",
+      "enum": ["ternary", "quaternary", "quinary"],
+      "default": "quaternary",
+      "description": "Type of phase field (number of elements) to investigate"
+    },
+    "method": {
+      "type": "string",
+      "enum": ["VAE", "AE", "VAE_encoder"],
+      "default": "VAE",
+      "description": "Unsupervised model: VAE / AE (PyOD) or VAE_encoder (Keras VAE with latent features)"
+    },
+    "features": {
+      "type": "string",
+      "default": "magpie",
+      "description": "Elemental feature set (a file name in the bundled data/elemental_features, e.g. magpie, oliynyk, mat2vec, megnet16, ...)"
+    },
+    "icsd_file": {
+      "type": "string",
+      "default": "icsd2017",
+      "description": "Bundled ICSD excerpt used as the training set of known phase fields"
+    },
+    "cations_train": {
+      "type": "string",
+      "default": "all",
+      "description": "Cations allowed in the training phase fields ('all' for every element)"
+    },
+    "anions_train": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["S", "O", "Cl", "Br", "F", "N", "Te", "P", "Se", "As", "I"],
+      "description": "Anions (negative oxidation-state elements) in the training set"
+    },
+    "nanions_train": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "default": 2,
+      "description": "Number of anions in the training phase fields (0 ignores oxidation states)"
+    },
+    "cation1_test": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["Li"],
+      "description": "Elements for the 1st (cation) position of the phase fields to rank"
+    },
+    "cation2_test": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["B", "Mg", "Al", "Si", "P", "K", "Ca", "Zn", "Sr", "Y", "Zr", "Sn", "Ba", "Ta", "La"],
+      "description": "Elements for the 2nd position (quaternary only; ignored for ternary MAA')"
+    },
+    "anion1_test": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["S", "O", "Cl", "Br", "I", "N", "F"],
+      "description": "Elements for the 3rd position of the phase fields to rank"
+    },
+    "anion2_test": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["S", "O", "Cl", "Br", "I", "N", "F"],
+      "description": "Elements for the 4th position (quaternary only; ignored for ternary)"
+    },
+    "cross_validate": {
+      "type": "boolean",
+      "default": false,
+      "description": "Run 5-fold cross-validation of the model"
+    },
+    "average_runs": {
+      "type": "integer",
+      "default": 1,
+      "description": "Number of runs to average scores over (meaningful for non-neural methods)"
+    }
+  },
+
+  "execution": {
+    "modes": {
+      "rank": {
+        "description": "Train an unsupervised model on ICSD phase-field patterns and rank the requested unexplored phase fields by similarity to known chemistry (likelihood of hosting a stable compound). The study is defined by the model parameters.",
+        "response": "deferred",
+        "outputs": {
+          "rankings.csv": {
+            "type": "file",
+            "mime_type": "text/csv",
+            "description": "Ranked phase fields with raw and normalised similarity scores"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of phase fields ranked"
+          },
+          "top_ranked": {
+            "type": "array",
+            "description": "Most-promising phase fields (lowest score = most similar to known chemistry)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "phase_field": { "type": "string", "description": "Space-separated element symbols" },
+                "score": { "type": "number", "description": "Reconstruction-error score (lower = more similar to ICSD)" },
+                "norm_score": { "type": "number", "description": "Normalised score" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

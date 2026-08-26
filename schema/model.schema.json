@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "model.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "parameters", "execution"],
+  "description": "Model contract for the LMDS platform. See CONTEXT.md for the domain language and docs/adr/0001 for the architectural decision.",
+
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URI of the JSON Schema used to validate this model descriptor"
+    },
+
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique name identifying the model. Used as the model key in API calls."
+    },
+
+    "version": {
+      "type": "string",
+      "description": "Semantic version string (e.g. 1.0.0). Auto-generated if not provided."
+    },
+
+    "assets": {
+      "type": "object",
+      "description": "Runtime files required by the model at execution time, such as pre-trained weights or lookup tables. Keys are target paths relative to the container WORKDIR; values are file-typed field declarations. Assets are immutable per ToolVersion.",
+      "additionalProperties": {
+        "$ref": "#/$defs/field"
+      }
+    },
+
+    "parameters": {
+      "type": "object",
+      "description": "Model-level configuration shared across all Modes — hyperparameters set once.",
+      "additionalProperties": {
+        "$ref": "#/$defs/field"
+      }
+    },
+
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modes"],
+      "description": "Execution configuration: a map of named Modes the caller can select at run time.",
+
+      "properties": {
+        "modes": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Free-form map of Modes keyed by Mode name. `instance` and `dataset` are conventional names, not a closed set. A model may declare one or many Modes.",
+          "additionalProperties": {
+            "$ref": "#/$defs/mode"
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outputs"],
+      "description": "A named, self-contained I/O contract. Declares inputs, outputs, and the response model.",
+
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of this Mode"
+        },
+
+        "response": {
+          "type": "string",
+          "enum": ["immediate", "deferred"],
+          "default": "immediate",
+          "description": "Delivery model for the Output JSON. `immediate`: the caller receives it in the response body (synchronous). `deferred`: the caller gets a job handle and polls for it later. Orthogonal to input/output shape. Defaults to `immediate`."
+        },
+
+        "inputs": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Named input Fields. Keys are input names, values are Field declarations. Optional — a Mode may take no inputs (parameter-only computation).",
+          "additionalProperties": {
+            "$ref": "#/$defs/field"
+          }
+        },
+
+        "outputs": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Named output Fields — value fields (handler returns them) and/or asset fields (handler writes the file, runner uploads it). Required: every Mode produces an Output JSON.",
+          "additionalProperties": {
+            "$ref": "#/$defs/field"
+          }
+        }
+      }
+    },
+
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "description": "A named input or output Field. Either a value (inline literal: string, number, integer, boolean, array, object) or a file (storage-managed reference). `file` is a first-class type used identically for inputs and outputs; the runner reads direction from context (input -> download, output -> upload).",
+
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "integer", "boolean", "array", "object", "file"],
+          "description": "Data type. `file` is a storage-managed reference, not a literal in the JSON."
+        },
+
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of this Field"
+        },
+
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this input must be provided. Meaningful for inputs; ignored for outputs. Default false."
+        },
+
+        "default": {
+          "description": "Default value used when the Field is not specified"
+        },
+
+        "enum": {
+          "type": "array",
+          "description": "Enumerated list of allowed values. The Field must match one of these.",
+          "items": {}
+        },
+
+        "format": {
+          "type": "string",
+          "enum": ["uri", "date-time", "email", "binary"],
+          "description": "Semantic format hint for string values. Not used for file Fields — file Fields use mime_type."
+        },
+
+        "mime_type": {
+          "type": "string",
+          "pattern": "^[a-z]+\\/(?:[a-z0-9.+-]+|\\*)$",
+          "description": "MIME type. Required when type is `file`. Allows a single trailing `*` (e.g. `image/*`, `text/*`); `*/*` and partial wildcards (e.g. `image/pn*`) are not valid."
+        },
+
+        "items": {
+          "$ref": "#/$defs/field",
+          "description": "For array type: element schema"
+        },
+
+        "properties": {
+          "type": "object",
+          "description": "For object type: nested Fields",
+          "additionalProperties": {
+            "$ref": "#/$defs/field"
+          }
+        },
+
+        "prefixItems": {
+          "type": "array",
+          "description": "For tuple-like arrays: a schema for each position",
+          "items": {
+            "$ref": "#/$defs/field"
+          }
+        },
+
+        "minItems": {
+          "type": "integer",
+          "description": "Minimum number of items in the array"
+        },
+
+        "maxItems": {
+          "type": "integer",
+          "description": "Maximum number of items in the array"
+        }
+      },
+
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "array" } }
+          },
+          "then": {
+            "anyOf": [
+              { "required": ["items"] },
+              { "required": ["prefixItems"] }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "object" } }
+          },
+          "then": {
+            "required": ["properties"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "file" } }
+          },
+          "then": {
+            "required": ["mime_type"],
+            "not": {
+              "anyOf": [
+                { "required": ["items"] },
+                { "required": ["properties"] },
+                { "required": ["prefixItems"] },
+                { "required": ["minItems"] },
+                { "required": ["maxItems"] },
+                { "required": ["format"] },
+                { "required": ["enum"] }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

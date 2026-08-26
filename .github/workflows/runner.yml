@@ -1,0 +1,75 @@
+name: Build and Register Model
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-register:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "Extracted version: ${VERSION}"
+
+      - name: Validate schema
+        run: |
+          echo "Running schema validation"
+
+          uv run validate-model schema/model.json || {
+            echo "ERROR: schema validation failed"
+            exit 1
+          }
+
+          echo "Schema validation passed"
+
+      - name: Generate types
+        run: |
+          echo "Generating Python types from schema"
+          uv run model-types schema/model.json -o src/model/types.py
+          echo "Types generated"
+
+      - name: Run tests
+        run: |
+          echo "Running model tests"
+          uv run pytest tests/ -v
+
+      - name: Build model artifact
+        run: |
+          echo "Building Python wheel"
+          uv build
+          echo "Built artifacts:"
+          ls -la dist/
+
+      - name: Build and push model container image
+        run: |
+          echo "Building model container image"
+
+          MODEL_NAME=$(jq -r '.name' schema/model.json)
+          IMAGE_TAG="localhost:5000/${MODEL_NAME}:${VERSION}"
+
+          echo "Model: ${MODEL_NAME}"
+          echo "Version: ${VERSION}"
+          echo "Image tag: ${IMAGE_TAG}"
+
+          docker build -t "${IMAGE_TAG}" .
+
+          echo "Pushing image to local registry"
+          docker push "${IMAGE_TAG}"
+
+          echo "Model image built and pushed successfully"
+
+      - name: Register model in API
+        run: |
+          echo "Posting model to local API"
+
+          curl -X POST http://localhost:42069/api/v1/models \
+            -H "Content-Type: application/json" \
+            -d @schema/model.json
