@@ -10,39 +10,6 @@
       "default": "quaternary",
       "description": "Type of phase field (number of elements) to investigate"
     },
-    "method": {
-      "type": "string",
-      "enum": ["VAE", "AE", "VAE_encoder"],
-      "default": "VAE",
-      "description": "Unsupervised model: VAE / AE (PyOD) or VAE_encoder (Keras VAE with latent features)"
-    },
-    "features": {
-      "type": "string",
-      "default": "magpie",
-      "description": "Elemental feature set (a file name in the bundled data/elemental_features, e.g. magpie, oliynyk, mat2vec, megnet16, ...)"
-    },
-    "icsd_file": {
-      "type": "string",
-      "default": "icsd2017",
-      "description": "Bundled ICSD excerpt used as the training set of known phase fields"
-    },
-    "cations_train": {
-      "type": "string",
-      "default": "all",
-      "description": "Cations allowed in the training phase fields ('all' for every element)"
-    },
-    "anions_train": {
-      "type": "array",
-      "items": { "type": "string" },
-      "default": ["S", "O", "Cl", "Br", "F", "N", "Te", "P", "Se", "As", "I"],
-      "description": "Anions (negative oxidation-state elements) in the training set"
-    },
-    "nanions_train": {
-      "type": "integer",
-      "enum": [0, 1, 2],
-      "default": 2,
-      "description": "Number of anions in the training phase fields (0 ignores oxidation states)"
-    },
     "cation1_test": {
       "type": "array",
       "items": { "type": "string" },
@@ -66,6 +33,39 @@
       "items": { "type": "string" },
       "default": ["S", "O", "Cl", "Br", "I", "N", "F"],
       "description": "Elements for the 4th position (quaternary only; ignored for ternary)"
+    },
+    "icsd_file": {
+      "type": "string",
+      "default": "icsd2017",
+      "description": "Bundled ICSD excerpt used as the training set of known phase fields"
+    },
+    "cations_train": {
+      "type": "string",
+      "default": "all",
+      "description": "Cations allowed in the training phase fields ('all' for every element)"
+    },
+    "anions_train": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["S", "O", "Cl", "Br", "F", "N", "Te", "P", "Se", "As", "I"],
+      "description": "Anions (negative oxidation-state elements) in the training set"
+    },
+    "nanions_train": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "default": 2,
+      "description": "Number of anions in the training phase fields (0 ignores oxidation states)"
+    },
+    "features": {
+      "type": "string",
+      "default": "magpie",
+      "description": "Elemental feature set (a file name in the bundled data/elemental_features, e.g. magpie, oliynyk, mat2vec, megnet16, ...)"
+    },
+    "method": {
+      "type": "string",
+      "enum": ["VAE", "AE", "VAE_encoder"],
+      "default": "VAE",
+      "description": "Unsupervised model: VAE / AE (PyOD) or VAE_encoder (Keras VAE with latent features)"
     },
     "cross_validate": {
       "type": "boolean",
