@@ -94,6 +94,33 @@
           "additionalProperties": {
             "$ref": "#/$defs/field"
           }
+        },
+
+        "rules": {
+          "type": "array",
+          "description": "Checks across several inputs, run before the form is submitted.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "any_of",
+              "message"
+            ],
+            "properties": {
+              "any_of": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "string"
+                },
+                "description": "Input names; at least one must be given. An input counts as given when it is filled in and differs from its default (so an empty list, or a number left at a default of 0, does not count)."
+              },
+              "message": {
+                "type": "string",
+                "description": "Shown when none of them is given"
+              }
+            }
+          }
         }
       }
     },
@@ -173,6 +200,65 @@
         "maxItems": {
           "type": "integer",
           "description": "Maximum number of items in the array"
+        },
+
+        "minimum": {
+          "type": "number",
+          "description": "Smallest allowed value, for number and integer fields. Checked before the run is submitted."
+        },
+
+        "maximum": {
+          "type": "number",
+          "description": "Largest allowed value, for number and integer fields. Checked before the run is submitted."
+        },
+
+        "header": {
+          "type": "boolean",
+          "default": true,
+          "description": "For CSV file inputs: whether the first row names the columns. Defaults to true."
+        },
+
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "description": "For CSV file inputs: the columns the file needs, in order. Shown to users as the file format and checked before the run is submitted (by name when the file has a header row, by position when it does not). Extra columns are allowed.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Column name (the header text when the file has a header row)"
+              },
+              "description": {
+                "type": "string",
+                "description": "What the column holds, with units"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "number",
+                  "integer"
+                ],
+                "default": "string",
+                "description": "Kind of value in every row"
+              },
+              "required": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether the file must have this column"
+              }
+            }
+          }
+        },
+
+        "example": {
+          "type": "string",
+          "description": "For file inputs: a short example of the file's contents (a few rows). Shown to users and offered as a download."
         }
       },
 

@@ -3,6 +3,7 @@ import json
 import mimetypes
 import os
 import sys
+import traceback
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -11,7 +12,7 @@ import structlog
 from infrastructure.logging import newLogger
 from infrastructure.s3 import S3Client, S3Config
 from infrastructure.storage import StorageService
-from infrastructure.handler import ModelHandler
+from infrastructure.handler import InputError, ModelHandler
 
 
 def _resolve_data_dir() -> Path:
@@ -232,4 +233,18 @@ def run(handler: ModelHandler, args: list[str] | None = None) -> None:
     else:
         config = S3Config.from_env()
         runner = ModelRunner(handler, local_mode=False, config=config)
-    runner.run(args)
+    # LMDS shows the last "LMDS_ERROR: " line of a failed run's logs as its
+    # error message, so a failure ends with one plain sentence for the user.
+    try:
+        runner.run(args)
+    except InputError as e:
+        print(f"LMDS_ERROR: {e}", file=sys.stderr, flush=True)
+        sys.exit(2)
+    except Exception as e:
+        traceback.print_exc()
+        print(
+            f"LMDS_ERROR: The tool failed unexpectedly ({type(e).__name__}: {e})",
+            file=sys.stderr,
+            flush=True,
+        )
+        sys.exit(1)

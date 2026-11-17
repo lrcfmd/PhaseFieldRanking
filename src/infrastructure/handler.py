@@ -2,6 +2,15 @@ from pathlib import Path
 from typing import Protocol
 
 
+class InputError(ValueError):
+    """A problem with the run's inputs that the user can fix.
+
+    Raise it from ``process`` with a message written for the person running
+    the tool (what is wrong and how to fix it). The runner reports it as the
+    run's error message, without a traceback.
+    """
+
+
 class ModelHandler(Protocol):
     """Protocol for model handlers.
 

@@ -71,9 +71,17 @@ class PhaseFieldRanker:
         logger.info("Author: Andrij Vasylenko | Date: 2020-08-13")
         logger.info("=" * 55)
 
+        self.prepare()
+        self.train_and_rank()
+
+    def prepare(self) -> None:
+        """Load the parameters and build the training and testing phase fields (fast)."""
         self.load_params()
         self.prepare_training_data()
         self.generate_testing_data()
+
+    def train_and_rank(self) -> None:
+        """Train the model on the training set and rank the testing set (slow)."""
         self.trainer = Trainer(
             model_name=self.params.method,
             phase_fields=self.params.phase_fields,
